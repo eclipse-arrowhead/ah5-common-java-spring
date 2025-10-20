@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service;
 
 import java.util.List;
@@ -44,14 +60,12 @@ public class PageService {
 
 		pageValidator.validatePageParameter(page, availableSortFields, origin);
 
-		final boolean notDefined = page.page() == null && page.size() == null;
-
-		int normalizedPage = notDefined ? -1 : page.page();
+		int normalizedPage = page.page() == null ? -1 : page.page();
 		if (normalizedPage < 0) {
 			normalizedPage = 0;
 		}
 
-		int normalizedSize = notDefined ? -1 : page.size();
+		int normalizedSize = page.size() == null ? -1 : page.size();
 		if (normalizedSize < 1) {
 			normalizedSize = maxPageSize;
 		}

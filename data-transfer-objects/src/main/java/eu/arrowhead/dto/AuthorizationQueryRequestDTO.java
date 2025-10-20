@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.dto;
 
 import java.util.List;
@@ -5,8 +21,9 @@ import java.util.List;
 public record AuthorizationQueryRequestDTO(
 		PageDTO pagination,
 		String level,
+		List<String> providers,
 		List<String> instanceIds,
-		List<String> targets,
-		List<String> clouds,
+		List<String> cloudIdentifiers,
+		List<String> targetNames,
 		String targetType) {
 }

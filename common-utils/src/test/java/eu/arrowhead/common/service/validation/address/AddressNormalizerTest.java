@@ -1,29 +1,52 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.address;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(classes = AddressNormalizer.class)
 public class AddressNormalizerTest {
 
 	//=================================================================================================
 	// members
 
-	@Autowired
-	private AddressNormalizer addressNormalizer;
+	private final AddressNormalizer addressNormalizer = new AddressNormalizer();
 
 	//=================================================================================================
 	// methods
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void normalizeInvalidAddressTest() {
+	public void normalizeEmptyInputTest() {
+		assertAll("Empty address",
+				() -> assertEquals("", addressNormalizer.normalize(null)),
+				() -> assertEquals("", addressNormalizer.normalize(" ")));
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	public void normalizeInvalidAddressOrDomainNameTest() {
 		// If the address is not MAC, IPv4, IPv6 or hybrid, the normalizer shouldn't change it (besides trim and toLowerCase).
-		assertAll("Invalid address",
+		assertAll("Domain name or invalid address",
+				// domain name
+				() -> assertEquals("localhost", addressNormalizer.normalize("localhost")),
+				() -> assertEquals("example.com", addressNormalizer.normalize("example.com")),
 				// incorrect number of separators
 				() -> assertEquals("a1:a1:a1:a1:a1a1", addressNormalizer.normalize("a1:a1:a1:a1:a1a1")),
 				// mixed separators
@@ -34,7 +57,16 @@ public class AddressNormalizerTest {
 				// invalid characters
 				() -> assertEquals("ä1:a1:a1:a1:a1:a1", addressNormalizer.normalize("ä1:a1:a1:a1:a1:a1")),
 				// looks like IPv6, but contains more than one duplicated colons
-				() -> assertEquals("2001::96b3::8a2e:0370:7cf4", addressNormalizer.normalize("2001::96b3::8a2e:0370:7cf4")));
+				() -> assertEquals("2001::96b3::8a2e:0370:7cf4", addressNormalizer.normalize("2001::96b3::8a2e:0370:7cf4")),
+				// looks like IPv6, but too much parts
+				() -> assertEquals("2001::96b3:0000:0000:8a2e:0370:7cf4:1111", addressNormalizer.normalize("2001::96b3:0000:0000:8a2e:0370:7cf4:1111")),
+				// looks like MAC address, but not
+				() -> assertEquals("1:a1:a1:a1:a1:a1", addressNormalizer.normalize("1:a1:a1:a1:a1:a1")),
+				// looks like IPv4-IPv6 hybrid, but contains test
+				() -> assertEquals("::ffff:192.0.two.128", addressNormalizer.normalize("::FFFF:192.0.two.128")),
+				// looks like IPv4-IPv6 hybrid, but invalid octet
+				() -> assertEquals("::ffff:192.0.-1.128", addressNormalizer.normalize("::FFFF:192.0.-1.128")),
+				() -> assertEquals("::ffff:192.0.300.128", addressNormalizer.normalize("::FFFF:192.0.300.128")));
 
 	}
 
@@ -45,7 +77,9 @@ public class AddressNormalizerTest {
 				// raw address was uppercase and contained whitespace characters
 				() -> assertEquals("ab:cd:ef:11:22:33", addressNormalizer.normalize(" \n\tAB:CD:EF:11:22:33 \r")),
 				// change dashes to colons
-				() -> assertEquals("ab:cd:ef:11:22:33", addressNormalizer.normalize(" \n\tAB-CD-EF-11-22-33 \r")));
+				() -> assertEquals("ab:cd:ef:11:22:33", addressNormalizer.normalize(" \n\tAB-CD-EF-11-22-33 \r")),
+				// change dot-separated representation to colon-separated representation
+				() -> assertEquals("00:1b:44:11:3a:b7", addressNormalizer.normalize("\n   001B.4411.3AB7   ")));
 	}
 
 	//-------------------------------------------------------------------------------------------------

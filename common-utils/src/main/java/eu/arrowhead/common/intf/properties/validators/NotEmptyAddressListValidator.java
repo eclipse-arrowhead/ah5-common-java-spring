@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.intf.properties.validators;
 
 import java.util.ArrayList;
@@ -26,10 +42,10 @@ public class NotEmptyAddressListValidator implements IPropertyValidator {
 	private final Logger logger = LogManager.getLogger(getClass());
 
 	@Autowired
-	private AddressNormalizer normalizer;
+	private AddressNormalizer addressNormalizer;
 
 	@Autowired
-	private AddressValidator validator;
+	private AddressValidator addressValidator;
 
 	//=================================================================================================
 	// methods
@@ -72,14 +88,14 @@ public class NotEmptyAddressListValidator implements IPropertyValidator {
 	private String validateAndNormalizeAddress(final String addressStr) throws InvalidParameterException {
 		logger.debug("NotEmptyAddressListValidator.validateAndNormalizeAddress started...");
 
-		final String normalized = normalizer.normalize(addressStr);
-		final AddressType addressType = validator.detectType(normalized);
+		final String normalized = addressNormalizer.normalize(addressStr);
+		final AddressType addressType = addressValidator.detectType(normalized);
 
 		if (!acceptableAddressTypes.contains(addressType)) {
 			throw new InvalidParameterException("Unacceptable address type in property value: " + addressType.name());
 		}
 
-		validator.validateNormalizedAddress(addressType, normalized);
+		addressValidator.validateNormalizedAddress(addressType, normalized);
 
 		return normalized;
 	}

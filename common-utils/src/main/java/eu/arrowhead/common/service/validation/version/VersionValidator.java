@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.version;
 
 import java.util.regex.Pattern;
@@ -33,7 +49,7 @@ public class VersionValidator {
 
 		// check size
 		if (version.length() > Constants.SYSTEM_VERSION_MAX_LENGTH) {
-			throw new InvalidParameterException(ERROR_MSG_PREFIX + "version length is too long");
+			throw new InvalidParameterException(ERROR_MSG_PREFIX + "version is too long");
 		}
 
 		// check the number of the dot characters
@@ -49,7 +65,7 @@ public class VersionValidator {
 
 		for (int i = 0; i < chunksOfVersion.length; ++i) {
 			if (!DIGITS_ONLY_PATTERN.matcher(chunksOfVersion[i]).matches()) {
-				throw new InvalidParameterException(ERROR_MSG_PREFIX + "the version should only contain numbers and separator dot characters");
+				throw new InvalidParameterException(ERROR_MSG_PREFIX + "the version should only contain numbers and separator " + DOT + " characters");
 			}
 		}
 	}

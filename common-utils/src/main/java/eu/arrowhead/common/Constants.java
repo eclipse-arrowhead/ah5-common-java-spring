@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common;
 
 import java.util.UUID;
@@ -11,11 +27,11 @@ public final class Constants {
 
 	// Framework version
 
-	public static final String AH_FRAMEWORK_VERSION = "5.0.0";
+	public static final String AH_FRAMEWORK_VERSION = "5.2.0";
 
 	// Global
 
-	public static final String SYSOP = "sysop";
+	public static final String SYSOP = "Sysop";
 	public static final String UTC = "UTC";
 	public static final String LOCALHOST = "localhost";
 	public static final String PKCS12 = "PKCS12";
@@ -28,6 +44,7 @@ public final class Constants {
 	public static final int HTTP_PORT = 80;
 	public static final String UNKNOWN = "<unknown>";
 	public static final String VERBOSE = "verbose";
+	public static final String UNBOUND = "unbound";
 	public static final String ARROWHEAD_CONTEXT = "arrowheadContext";
 	public static final String SERVER_STANDALONE_MODE = "server.standalone.mode";
 	public static final String SERVER_COMMON_NAME = "server.common.name";
@@ -39,10 +56,22 @@ public final class Constants {
 	public static final String KEY_IDENTITY_RENEWAL_THRESHOLD = "identity-renewal-threshold";
 	public static final String KEY_PREFIX_FOR_SERVICE_MODEL = "service-model$$";
 
-	public static final String GENERIC_HTTP_INTERFACE_TEMPLATE_NAME = "generic-http";
-	public static final String GENERIC_HTTPS_INTERFACE_TEMPLATE_NAME = "generic-https";
-	public static final String GENERIC_MQTT_INTERFACE_TEMPLATE_NAME = "generic-mqtt";
-	public static final String GENERIC_MQTTS_INTERFACE_TEMPLATE_NAME = "generic-mqtts";
+	public static final String METADATA_KEY_UNRESTRICTED_DISCOVERY = "unrestrictedDiscovery";
+	public static final String METADATA_KEY_X509_PUBLIC_KEY = "x509PublicKey";
+	public static final String METADATA_KEY_ALLOW_EXCLUSIVITY = "allowExclusivity";
+	public static final String METADATA_KEY_INTERFACE_BRIDGE = "interfaceBridge";
+	public static final String METADATA_KEY_FROM = "from";
+	public static final String METADATA_KEY_TO = "to";
+	public static final String METADATA_KEY_DATA_MODEL_IDS = "dataModelIds";
+
+	public static final String PROPERTY_KEY_DATA_MODELS = "dataModels";
+	public static final String PROPERTY_KEY_INPUT = "input";
+	public static final String PROPERTY_KEY_OUTPUT = "output";
+
+	public static final String GENERIC_HTTP_INTERFACE_TEMPLATE_NAME = "generic_http";
+	public static final String GENERIC_HTTPS_INTERFACE_TEMPLATE_NAME = "generic_https";
+	public static final String GENERIC_MQTT_INTERFACE_TEMPLATE_NAME = "generic_mqtt";
+	public static final String GENERIC_MQTTS_INTERFACE_TEMPLATE_NAME = "generic_mqtts";
 
 	public static final int REQUEST_FILTER_ORDER_AUTHENTICATION = 15;
 	public static final int REQUEST_FILTER_ORDER_AUTHORIZATION_BLACKLIST = 20;
@@ -55,10 +84,13 @@ public final class Constants {
 
 	public static final String MAX_PAGE_SIZE = "max.page.size";
 	public static final String $MAX_PAGE_SIZE_WD = "${" + MAX_PAGE_SIZE + ":" + Defaults.MAX_PAGE_SIZE_DEFAULT + "}";
-
-	public static final String METADATA_KEY_UNRESTRICTED_DISCOVERY = "unrestricted-discovery";
+	public static final String NORMALIZATION_MODE = "normalization.mode";
+	public static final String $NORMALIZATION_MODE_WD = "${" + NORMALIZATION_MODE + ":" + Defaults.NORMALIZATION_MODE_DEFAULT + "}";
 
 	public static final String COMMA = ",";
+	public static final String DOT = ".";
+	public static final String COMPOSITE_ID_DELIMITER = "|";
+	public static final String COMPOSITE_ID_DELIMITER_REGEXP = "\\|";
 
 	// Naming convention related
 	public static final String NAME_SEPARATOR = "\\|";
@@ -67,11 +99,13 @@ public final class Constants {
 
 	public static final String BEAN_NAME_SYSTEM_INFO = "systemInfo";
 
-	public static final String SYS_NAME_SERVICE_REGISTRY = "serviceregistry";
-	public static final String SYS_NAME_CONSUMER_AUTHORIZATION = "consumer-authorization";
-	public static final String SYS_NAME_BLACKLIST = "blacklist";
-	public static final String SERVICEORCHESTRATION_DYNAMIC = "serviceorchestration-dynamic";
-	public static final String SERVICEORCHESTRATION_FLEXIBLE = "serviceorchestration-flexible";
+	public static final String SYS_NAME_SERVICE_REGISTRY = "ServiceRegistry";
+	public static final String SYS_NAME_AUTHENTICATION = "Authentication";
+	public static final String SYS_NAME_CONSUMER_AUTHORIZATION = "ConsumerAuthorization";
+	public static final String SYS_NAME_DYNAMIC_SERVICE_ORCHESTRATION = "DynamicServiceOrchestration";
+	public static final String SYS_NAME_FLEXIBLE_SERVICE_ORCHESTRATION = "FlexibleServiceOrchestration";
+	public static final String SYS_NAME_BLACKLIST = "Blacklist";
+	public static final String SYS_NAME_TRANSLATION_MANAGER = "TranslationManager";
 
 	public static final String SECURITY_REQ_AUTHORIZATION = "Authorization";
 
@@ -85,14 +119,14 @@ public final class Constants {
 	public static final String $SERVER_PORT = "${" + SERVER_PORT + ":" + Defaults.SERVER_PORT_DEFAULT + "}";
 	public static final String DOMAIN_NAME = "domain.name";
 	public static final String $DOMAIN_NAME = "${" + DOMAIN_NAME + ":" + Defaults.DOMAIN_NAME_DEFAULT + "}";
-	public static final String SERVICEREGISTRY_ADDRESS = "service.registry.address";
-	public static final String $SERVICEREGISTRY_ADDRESS_WD = "${" + SERVICEREGISTRY_ADDRESS + ":" + Defaults.SERVICEREGISTRY_ADDRESS_DEFAULT + "}";
-	public static final String SERVICEREGISTRY_PORT = "service.registry.port";
-	public static final String $SERVICEREGISTRY_PORT_WD = "${" + SERVICEREGISTRY_PORT + ":" + Defaults.SERVICEREGISTRY_PORT_DEFAULT + "}";
+	public static final String SERVICE_REGISTRY_ADDRESS = "service.registry.address";
+	public static final String $SERVICE_REGISTRY_ADDRESS_WD = "${" + SERVICE_REGISTRY_ADDRESS + ":" + Defaults.SERVICE_REGISTRY_ADDRESS_DEFAULT + "}";
+	public static final String SERVICE_REGISTRY_PORT = "service.registry.port";
+	public static final String $SERVICE_REGISTRY_PORT_WD = "${" + SERVICE_REGISTRY_PORT + ":" + Defaults.SERVICE_REGISTRY_PORT_DEFAULT + "}";
 	public static final String AUTHENTICATION_POLICY = "authentication.policy";
 	public static final String $AUTHENTICATION_POLICY_WD = "${" + AUTHENTICATION_POLICY + ":" + Defaults.AUTHENTICATION_POLICY_DEFAULT + "}";
 	public static final String AUTHENTICATOR_SECRET_KEYS = "authenticator.secret.keys";
-	public static final String $AUTHENTICATOR_SECRET_KEYS = "#{${" + AUTHENTICATOR_SECRET_KEYS + "}}";
+	public static final String $AUTHENTICATOR_SECRET_KEYS = "#{${" + AUTHENTICATOR_SECRET_KEYS + ":null}}";
 	public static final String AUTHENTICATOR_CREDENTIALS = "authenticator.credentials";
 	public static final String $AUTHENTICATOR_CREDENTIALS = "#{${" + AUTHENTICATOR_CREDENTIALS + ":null}}";
 	public static final String AUTHENTICATIOR_LOGIN_INTERVAL = "authenticator.login.interval";
@@ -111,8 +145,11 @@ public final class Constants {
 	public static final String HTTP_COLLECTOR_MODE = "http.collector.mode";
 	public static final String $HTTP_COLLECTOR_MODE_WD = "${" + HTTP_COLLECTOR_MODE + ":" + Defaults.HTTP_COLLECTOR_MODE_DEFAULT + "}";
 	public static final String ENABLE_BLACKLIST_FILTER = "enable.blacklist.filter";
+	public static final String $ENABLE_BLACKLIST_FILTER_WD = "${" + ENABLE_BLACKLIST_FILTER + ":" + Defaults.ENABLE_BLACKLIST_FILTER_DEFAULT + "}";
 	public static final String FORCE_BLACKLIST_FILTER = "force.blacklist.filter";
 	public static final String $FORCE_BLACKLIST_FILTER_WD = "${" + FORCE_BLACKLIST_FILTER + ":" + Defaults.FORCE_BLACKLIST_FILTER_DEFAULT + "}";
+	public static final String BLACKLIST_CHECK_EXCLUDE_LIST = "blacklist.check.exclude.list";
+	public static final String $BLACKLIST_CHECK_EXCLUDE_LIST_WD = "${" + BLACKLIST_CHECK_EXCLUDE_LIST + ":" + Defaults.BLACKLIST_CHECK_EXCLUDE_LIST_DEFAULT + "}";
 	public static final String SERVICE_ADDRESS_ALIAS = "service.address.alias";
 	public static final String $SERVICE_ADDRESS_ALIAS = "${" + SERVICE_ADDRESS_ALIAS + "}";
 
@@ -122,10 +159,13 @@ public final class Constants {
 	public static final String AUTHENTICATION_PREFIX_SYSTEM = "SYSTEM";
 	public static final String AUTHENTICATION_PREFIX_IDENTITY_TOKEN = "IDENTITY-TOKEN";
 
-	public static final String METADATA_KEY_X509_PUBLIC_KEY = "x509-public-key";
-	public static final String METADATA_KEY_ALLOW_EXCLUSIVITY = "allow-exclusivity";
+	public static final String AUTHORIZATION_TOKEN_VARIANT_SUFFIX = "TOKEN_AUTH";
+	public static final String AUTHORIZATION_SCHEMA = "Bearer";
 
 	// SSL related
+
+	public static final int SYSTEM_CERT_CN_LENGTH = 5;
+	public static final int CLOUD_CERT_CN_LENGTH = 4;
 
 	public static final String X_509 = "X.509";
 	public static final String SERVER_SSL_ENABLED = "server.ssl.enabled";
@@ -230,26 +270,35 @@ public final class Constants {
 
 	// Service related
 
-	public static final String SERVICE_DEF_GENERAL_MANAGEMENT = "general-management";
+	public static final String SERVICE_DEF_GENERAL_MANAGEMENT = "generalManagement";
 
-	public static final String SERVICE_DEF_DEVICE_DISCOVERY = "device-discovery";
-	public static final String SERVICE_DEF_SYSTEM_DISCOVERY = "system-discovery";
-	public static final String SERVICE_DEF_SERVICE_DISCOVERY = "service-discovery";
-	public static final String SERVICE_DEF_SERVICE_REGISTRY_MANAGEMENT = "service-registry-management";
-	public static final String SERVICE_DEF_BLACKLIST_DISCOVERY = "blacklist-discovery";
-	public static final String SERVICE_DEF_BLACKLIST_MANAGEMENT = "blacklist-management";
+	public static final String SERVICE_DEF_DEVICE_DISCOVERY = "deviceDiscovery";
+	public static final String SERVICE_DEF_SYSTEM_DISCOVERY = "systemDiscovery";
+	public static final String SERVICE_DEF_SERVICE_DISCOVERY = "serviceDiscovery";
+	public static final String SERVICE_DEF_SERVICE_REGISTRY_MANAGEMENT = "serviceRegistryManagement";
+	public static final String SERVICE_DEF_BLACKLIST_DISCOVERY = "blacklistDiscovery";
+	public static final String SERVICE_DEF_BLACKLIST_MANAGEMENT = "blacklistManagement";
 	public static final String SERVICE_DEF_MONITOR = "monitor";
 
-	public static final String SERVICE_DEF_ORCHESTRATION = "orchestration";
-	public static final String SERVICE_DEF_ORCHESTRATION_PUSH_MANAGEMENT = "orchestration-push-management";
-	public static final String SERVICE_DEF_ORCHESTRATION_LOCK_MANAGEMENT = "orchestration-lock-management";
-	public static final String SERVICE_DEF_ORCHESTRATION_HISTORY_MANAGEMENT = "orchestration-history-management";
+	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION = "serviceOrchestration";
+	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_PUSH_MANAGEMENT = "serviceOrchestrationPushManagement";
+	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_LOCK_MANAGEMENT = "serviceOrchestrationLockManagement";
+	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_HISTORY_MANAGEMENT = "serviceOrchestrationHistoryManagement";
 
 	public static final String SERVICE_DEF_IDENTITY = "identity";
-	public static final String SERVICE_DEF_IDENTITY_MANAGEMENT = "identity-management";
+	public static final String SERVICE_DEF_IDENTITY_MANAGEMENT = "identityManagement";
 
 	public static final String SERVICE_DEF_AUTHORIZATION = "authorization";
-	public static final String SERVICE_DEF_AUTHORIZATION_MANAGEMENT = "authorization-management";
+	public static final String SERVICE_DEF_AUTHORIZATION_MANAGEMENT = "authorizationManagement";
+	public static final String SERVICE_DEF_AUTHORIZATION_TOKEN = "authorizationToken";
+	public static final String SERVICE_DEF_AUTHORIZATION_TOKEN_MANAGEMENT = "authorizationTokenManagement";
+
+	public static final String SERVICE_DEF_TRANSLATION_REPORT = "translationReport";
+	public static final String SERVICE_DEF_TRANSLATION_BRIDGE = "translationBridge";
+	public static final String SERVICE_DEF_TRANSLATION_BRIDGE_MANAGEMENT = "translationBridgeManagement";
+
+	public static final String SERVICE_DEF_INTERFACE_BRIDGE_MANAGEMENT = "interfaceBridgeManagement";
+	public static final String SERVICE_DEF_DATA_MODEL_TRANSLATION = "dataModelTranslation";
 
 	// Operation related
 
@@ -264,6 +313,13 @@ public final class Constants {
 	public static final String SERVICE_OP_REVOKE = "revoke";
 	public static final String SERVICE_OP_CHECK = "check";
 	public static final String SERVICE_OP_VERIFY = "verify";
+	public static final String SERVICE_OP_GENERATE = "generate";
+	public static final String SERVICE_OP_GET_PUBLIC_KEY = "get-public-key";
+	public static final String SERVICE_OP_REPORT = "report";
+	public static final String SERVICE_OP_DISCOVERY = "discovery";
+	public static final String SERVICE_OP_NEGOTIATION = "negotiation";
+	public static final String SERVICE_OP_ABORT = "abort";
+	public static final String SERVICE_OP_QUERY = "query";
 
 	public static final String SERVICE_OP_DEVICE_QUERY = "device-query";
 	public static final String SERVICE_OP_DEVICE_CREATE = "device-create";
@@ -312,6 +368,17 @@ public final class Constants {
 	public static final String SERVICE_OP_AUTHORIZATION_REVOKE_POLICIES = "revoke-policies";
 	public static final String SERVICE_OP_AUTHORIZATION_QUERY_POLICIES = "query-policies";
 	public static final String SERVICE_OP_AUTHORIZATION_CHECK_POLICIES = "check-policies";
+	public static final String SERVICE_OP_AUTHORIZATION_GENERATE_TOKENS = "generate-tokens";
+	public static final String SERVICE_OP_AUTHORIZATION_QUERY_TOKENS = "query-tokens";
+	public static final String SERVICE_OP_AUTHORIZATION_REVOKE_TOKENS = "revoke-tokens";
+	public static final String SERVICE_OP_AUTHORIZATION_ADD_ENCRYPTION_KEYS = "add-encryption-keys";
+	public static final String SERVICE_OP_AUTHORIZATION_REMOVE_ENCRYPTION_KEYS = "remove-encryption-keys";
+	public static final String SERVICE_OP_AUTHORIZATION_TOKEN_REGISTER_ENCRYPTION_KEY = "register-encryption-key";
+	public static final String SERVICE_OP_AUTHORIZATION_TOKEN_UNREGISTER_ENCRYPTION_KEY = "unregister-encryption-key";
+
+	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_CHECK_TARGETS = "check-targets";
+	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_INIT_BRIDGE = "initialize-bridge";
+	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_ABORT_BRIDGE = "abort-bridge";
 
 	public static final String HTTP_API_OP_ECHO_PATH = "/echo";
 	public static final String HTTP_API_OP_LOGS_PATH = "/logs";
@@ -323,11 +390,17 @@ public final class Constants {
 	public static final int SYSTEM_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 	public static final int SYSTEM_VERSION_MAX_LENGTH = ArrowheadEntity.VARCHAR_TINY;
 	public static final int SERVICE_DEFINITION_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
+	public static final int SERVICE_OPERATION_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 	public static final int ADDRESS_MAX_LENGTH = ArrowheadEntity.VARCHAR_LARGE;
-	public static final int INTERFACE_TEMPLATE_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_MEDIUM;
+	public static final int INTERFACE_TEMPLATE_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 	public static final int INTERFACE_TEMPLATE_PROTOCOL_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 	public static final int INTERFACE_PROPERTY_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 	public static final int SERVICE_INSTANCE_ID_MAX_LENGTH = ArrowheadEntity.VARCHAR_MEDIUM;
+	public static final int CLOUD_IDENTIFIER_MAX_LENGTH = 2 * SYSTEM_NAME_MAX_LENGTH + COMPOSITE_ID_DELIMITER.length();
+	public static final int EVENT_TYPE_NAME_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
+	public static final int SCOPE_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
+	public static final int AUTHORIZATION_POLICY_ID_MAX_LENGTH = ArrowheadEntity.VARCHAR_LARGE;
+	public static final int DATA_MODEL_ID_MAX_LENGTH = ArrowheadEntity.VARCHAR_SMALL;
 
 	// Quartz related
 

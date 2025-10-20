@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.jpa;
 
 import java.time.ZonedDateTime;
@@ -12,7 +28,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 
 @MappedSuperclass
-public class UnmodifiableArrowheadEntity {
+public abstract class UnmodifiableArrowheadEntity {
 
 	//=================================================================================================
 	// members
@@ -36,6 +52,31 @@ public class UnmodifiableArrowheadEntity {
 	@PrePersist
 	public void onCreate() {
 		this.createdAt = Utilities.utcNow();
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null) {
+			return false;
+		}
+
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+
+		final UnmodifiableArrowheadEntity other = (UnmodifiableArrowheadEntity) obj;
+		return id == other.id;
 	}
 
 	//=================================================================================================

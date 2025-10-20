@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.meta;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -73,6 +89,23 @@ public class MetadataRequirementTokenizerTest {
 	public void parseRequirementsDefaultWithMap() {
 		final MetadataRequirementDTO req = new MetadataRequirementDTO();
 		req.put("key", Map.of("subkey", "something", "value", List.of(1, 2, 3)));
+
+		final List<MetadataRequirementExpression> expressions = MetadataRequirementTokenizer.parseRequirements(req);
+		assertAll("Default requirement with map",
+				() -> assertNotNull(expressions),
+				() -> assertEquals(1, expressions.size()),
+				() -> assertEquals("key", expressions.get(0).keyPath()),
+				() -> assertEquals(MetaOps.EQUALS, expressions.get(0).operation()),
+				() -> assertInstanceOf(Map.class, expressions.get(0).value()),
+				() -> assertEquals(2, ((Map<?, ?>) expressions.get(0).value()).size()));
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	@SuppressWarnings("checkstyle:magicnumber")
+	public void parseRequirementsDefaultWithMap2() {
+		final MetadataRequirementDTO req = new MetadataRequirementDTO();
+		req.put("key", Map.of("subkey", "something", "op", "UNKNOWN"));
 
 		final List<MetadataRequirementExpression> expressions = MetadataRequirementTokenizer.parseRequirements(req);
 		assertAll("Default requirement with map",

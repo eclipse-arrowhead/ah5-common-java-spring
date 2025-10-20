@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.init;
 
 import java.io.IOException;
@@ -101,10 +117,11 @@ public abstract class ApplicationInitListener {
 		}
 
 		if (sysInfo.isSslEnabled()) {
+			checkSSLProperties();
 			final KeyStore keyStore = initializeKeyStore();
 			obtainKeys(keyStore);
 			if (sysInfo.getAuthenticationPolicy() == AuthenticationPolicy.CERTIFICATE) {
-				// in this case the certificate must be compliant with the Arrowhead Certificate Structure
+				// in this case the certificate must be compliant with the Arrowhead Certificate structure
 				checkServerCertificate(keyStore);
 			}
 		}
@@ -129,11 +146,21 @@ public abstract class ApplicationInitListener {
 
 		try {
 			customDestroy();
+		} catch (final Throwable t) {
+			logger.error(t.getMessage());
+			logger.debug(t);
+		}
 
+		try {
 			if (sysInfo.isMqttApiEnabled()) {
 				mqttController.disconnect();
 			}
+		} catch (final Throwable t) {
+			logger.error(t.getMessage());
+			logger.debug(t);
+		}
 
+		try {
 			// logout attempt
 			if (AuthenticationPolicy.OUTSOURCED == sysInfo.getAuthenticationPolicy()) {
 				arrowheadHttpService.consumeService(Constants.SERVICE_DEF_IDENTITY, Constants.SERVICE_OP_IDENTITY_LOGOUT, Void.TYPE, getLogoutPayload());
@@ -148,7 +175,7 @@ public abstract class ApplicationInitListener {
 	// assistant methods
 
 	//-------------------------------------------------------------------------------------------------
-	protected void customInit(final ContextRefreshedEvent event) throws InterruptedException {
+	protected void customInit(final ContextRefreshedEvent event) throws InterruptedException, ConfigurationException {
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -170,14 +197,21 @@ public abstract class ApplicationInitListener {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	private KeyStore initializeKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-		logger.debug("initializeKeyStore started...");
-		Assert.isTrue(sysInfo.isSslEnabled(), "SSL is not enabled");
+	private void checkSSLProperties() {
+		logger.debug("checkSSLProperties started...");
+
 		final String messageNotDefined = " is not defined";
 		Assert.isTrue(!Utilities.isEmpty(sysInfo.getSslProperties().getKeyStoreType()), Constants.SERVER_SSL_KEY__STORE__TYPE + messageNotDefined);
 		Assert.notNull(sysInfo.getSslProperties().getKeyStore(), Constants.SERVER_SSL_KEY__STORE + messageNotDefined);
 		Assert.isTrue(sysInfo.getSslProperties().getKeyStore().exists(), Constants.SERVER_SSL_KEY__STORE + " file is not found");
 		Assert.notNull(sysInfo.getSslProperties().getKeyStorePassword(), Constants.SERVER_SSL_KEY__STORE__PASSWORD + messageNotDefined);
+		Assert.isTrue(!Utilities.isEmpty(sysInfo.getSslProperties().getKeyAlias()), Constants.SERVER_SSL_KEY__ALIAS + messageNotDefined);
+		Assert.notNull(sysInfo.getSslProperties().getKeyPassword(), Constants.SERVER_SSL_KEY__PASSWORD + messageNotDefined);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private KeyStore initializeKeyStore() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+		logger.debug("initializeKeyStore started...");
 
 		final KeyStore keystore = KeyStore.getInstance(sysInfo.getSslProperties().getKeyStoreType());
 		keystore.load(sysInfo.getSslProperties().getKeyStore().getInputStream(), sysInfo.getSslProperties().getKeyStorePassword().toCharArray());
@@ -186,35 +220,11 @@ public abstract class ApplicationInitListener {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	private void checkServerCertificate(final KeyStore keyStore) {
-		logger.debug("checkServerCertificate started...");
-
-		final X509Certificate serverCertificate = (X509Certificate) arrowheadContext.get(Constants.SERVER_CERTIFICATE);
-		final CommonNameAndType serverData = SecurityUtilities.getIdentificationDataFromSubjectDN(serverCertificate.getSubjectX500Principal().getName(X500Principal.RFC2253));
-
-		if (serverData == null) {
-			throw new AuthException("Server certificate is not compliant with the Arrowhead certificate structure, common name and profile type not found");
-		}
-		if (CertificateProfileType.SYSTEM != serverData.profileType()) {
-			throw new AuthException("Server certificate is not compliant with the Arrowhead certificate structure, invalid profile type: " + serverData.profileType());
-		}
-
-		if (!SecurityUtilities.isValidSystemCommonName(serverData.commonName())) {
-			logger.error("Server CN ({}) is not compliant with the Arrowhead certificate structure, since it does not have 5 parts", serverData.commonName());
-			throw new AuthException("Server CN (" + serverData.commonName() + ") is not compliant with the Arrowhead certificate structure, since it does not have 5 parts");
-		}
-		logger.info("Server CN: {}", serverData.commonName());
-
-		arrowheadContext.put(Constants.SERVER_COMMON_NAME, serverData.commonName());
-	}
-
-	//-------------------------------------------------------------------------------------------------
 	private void obtainKeys(final KeyStore keyStore) {
 		logger.debug("obtainKeys started...");
 
 		final X509Certificate serverCertificate = SecurityUtilities.getCertificateFromKeyStore(keyStore, sysInfo.getSslProperties().getKeyAlias());
 		if (serverCertificate == null) {
-			// never happens because checkServer
 			throw new ServiceConfigurationError("Cannot find server certificate in the specified key store");
 		}
 
@@ -227,6 +237,32 @@ public abstract class ApplicationInitListener {
 			throw new ServiceConfigurationError("Cannot find private key in the specified key store");
 		}
 		arrowheadContext.put(Constants.SERVER_PRIVATE_KEY, privateKey);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private void checkServerCertificate(final KeyStore keyStore) {
+		logger.debug("checkServerCertificate started...");
+
+		final X509Certificate serverCertificate = (X509Certificate) arrowheadContext.get(Constants.SERVER_CERTIFICATE);
+		final CommonNameAndType serverData = SecurityUtilities.getIdentificationDataFromSubjectDN(serverCertificate.getSubjectX500Principal().getName(X500Principal.RFC2253));
+
+		if (serverData == null) {
+			throw new AuthException("Server certificate is not compliant with the Arrowhead certificate structure, common name and profile type not found");
+		}
+
+		if (CertificateProfileType.SYSTEM != serverData.profileType()) {
+			throw new AuthException("Server certificate is not compliant with the Arrowhead certificate structure, invalid profile type: " + serverData.profileType());
+		}
+
+		if (!SecurityUtilities.isValidSystemCommonName(serverData.commonName())) {
+			logger.error("Server CN ({}) is not compliant with the Arrowhead certificate structure, since it does not have {} parts", serverData.commonName(), Constants.SYSTEM_CERT_CN_LENGTH);
+			throw new AuthException("Server CN (" + serverData.commonName() + ") is not compliant with the Arrowhead certificate structure, since it does not have "
+					+ Constants.SYSTEM_CERT_CN_LENGTH + " parts");
+		}
+
+		logger.info("Server CN: {}", serverData.commonName());
+
+		arrowheadContext.put(Constants.SERVER_COMMON_NAME, serverData.commonName());
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -251,7 +287,7 @@ public abstract class ApplicationInitListener {
 			return;
 		}
 
-		// if authentication is handled by an other system, we have to wait a little to give time to running login job
+		// if authentication is handled by an other system, we have to wait a little to give time to the running login job
 		if (AuthenticationPolicy.OUTSOURCED == sysInfo.getAuthenticationPolicy()) {
 			Thread.sleep(sysInfo.getAuthenticatorLoginDelay());
 		}
@@ -291,15 +327,16 @@ public abstract class ApplicationInitListener {
 		for (int i = 0; i <= retries; ++i) {
 			try {
 				serviceCollector.getServiceModel(Constants.SERVICE_DEF_SYSTEM_DISCOVERY, templateName, Constants.SYS_NAME_SERVICE_REGISTRY);
-				logger.info("Service Registry is accessable...");
+				logger.info("ServiceRegistry is accessible...");
 				break;
 			} catch (final ForbiddenException | AuthException ex) {
+				// should never happen
 				throw ex;
 			} catch (final ArrowheadException ex) {
 				if (i >= retries) {
 					throw ex;
 				} else {
-					logger.info("Service Registry is unavailable at the moment, retrying in {} seconds...", period);
+					logger.info("ServiceRegistry is unavailable at the moment, retrying in {} seconds...", period);
 					Thread.sleep(period * Constants.CONVERSION_MILLISECOND_TO_SECOND);
 				}
 			}
@@ -310,12 +347,18 @@ public abstract class ApplicationInitListener {
 	private void registerService(final ServiceModel model) {
 		logger.debug("registerService started...");
 
+		final ServiceInterfacePolicy interfacePolicy = sysInfo.getAuthenticationPolicy() == AuthenticationPolicy.CERTIFICATE ? ServiceInterfacePolicy.CERT_AUTH : ServiceInterfacePolicy.NONE;
 		final List<ServiceInstanceInterfaceRequestDTO> interfaces = model.interfaces()
 				.stream()
-				.map(i -> new ServiceInstanceInterfaceRequestDTO(i.templateName(), i.protocol(), ServiceInterfacePolicy.NONE.name(), i.properties()))
+				.map(i -> new ServiceInstanceInterfaceRequestDTO(i.templateName(), i.protocol(), interfacePolicy.name(), i.properties()))
 				.collect(Collectors.toList());
 		final ServiceInstanceCreateRequestDTO payload = new ServiceInstanceCreateRequestDTO(model.serviceDefinition(), model.version(), null, model.metadata(), interfaces);
-		final ServiceInstanceResponseDTO response = arrowheadHttpService.consumeService(Constants.SERVICE_DEF_SERVICE_DISCOVERY, Constants.SERVICE_OP_REGISTER, Constants.SYS_NAME_SERVICE_REGISTRY, ServiceInstanceResponseDTO.class, payload);
+		final ServiceInstanceResponseDTO response = arrowheadHttpService.consumeService(
+				Constants.SERVICE_DEF_SERVICE_DISCOVERY,
+				Constants.SERVICE_OP_REGISTER,
+				Constants.SYS_NAME_SERVICE_REGISTRY,
+				ServiceInstanceResponseDTO.class,
+				payload);
 		registeredServices.add(response.instanceId());
 	}
 
@@ -334,7 +377,7 @@ public abstract class ApplicationInitListener {
 				arrowheadHttpService.consumeService(Constants.SERVICE_DEF_SERVICE_DISCOVERY, Constants.SERVICE_OP_REVOKE, Constants.SYS_NAME_SERVICE_REGISTRY, Void.class, List.of(serviceInstanceId));
 			}
 
-			logger.info("Core system {} revoked {} service(s)", sysInfo, registeredServices.size());
+			logger.info("Core system {} revoked {} service(s)", sysInfo.getSystemName(), registeredServices.size());
 			registeredServices.clear();
 		} catch (final Throwable t) {
 			logger.error(t.getMessage());

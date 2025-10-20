@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.http.filter.authentication;
 
 import java.io.IOException;
@@ -26,7 +42,7 @@ import eu.arrowhead.common.http.model.HttpOperationModel;
 import eu.arrowhead.common.model.InterfaceModel;
 import eu.arrowhead.common.model.ServiceModel;
 import eu.arrowhead.common.security.SecurityUtilities;
-import eu.arrowhead.common.service.validation.name.NameNormalizer;
+import eu.arrowhead.common.service.validation.name.SystemNameNormalizer;
 import eu.arrowhead.dto.IdentityVerifyResponseDTO;
 import eu.arrowhead.dto.ServiceInstanceLookupRequestDTO;
 import jakarta.annotation.PostConstruct;
@@ -47,9 +63,6 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 	private Map<String, String> secretKeys = null;
 
 	@Autowired
-	private NameNormalizer nameNormalizer;
-
-	@Autowired
 	private SystemInfo sysInfo;
 
 	@Autowired
@@ -57,6 +70,9 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 
 	@Autowired
 	private ArrowheadHttpService httpService;
+
+	@Autowired
+	private SystemNameNormalizer systemNameNormalizer;
 
 	//=================================================================================================
 	// assistant methods
@@ -76,7 +92,7 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 
 			if (!isAuthenticationLookup) {
 				final AuthenticationData data = processAuthHeader(requestWrapper);
-				request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_AUTHENTICATED_SYSTEM, data.systemName);
+				request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_AUTHENTICATED_SYSTEM, data.systemName());
 				request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_SYSOP_REQUEST, data.sysop());
 			}
 
@@ -91,36 +107,41 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 	private boolean isAuthenticationLookup(final MultiReadRequestWrapper request) {
 		log.debug("OutsourcedFilter.isAuthenticationLookup started...");
 
-		// is the filter running inside Service Registry?
+		// is the filter running inside ServiceRegistry?
 		if (!sysInfo.getSystemName().equals(Constants.SYS_NAME_SERVICE_REGISTRY)) {
 			return false;
 		}
 
 		// is the request is a lookup?
 		// finding the path and method of the lookup operation
+		String basePath = null;
 		HttpOperationModel lookupOp = null;
 		final ServiceModel model = collector.getServiceModel(
 				Constants.SERVICE_DEF_SERVICE_DISCOVERY,
 				sysInfo.isSslEnabled() ? Constants.GENERIC_HTTPS_INTERFACE_TEMPLATE_NAME : Constants.GENERIC_HTTP_INTERFACE_TEMPLATE_NAME,
 				Constants.SYS_NAME_SERVICE_REGISTRY);
 
+		if (model == null) {
+			return false;
+		}
+
 		for (final InterfaceModel intf : model.interfaces()) {
 			final Map<String, HttpOperationModel> ops = (Map<String, HttpOperationModel>) intf.properties().get(HttpInterfaceModel.PROP_NAME_OPERATIONS);
 			if (ops.containsKey(Constants.SERVICE_OP_LOOKUP)) {
 				// if there is a lookup operation, we can get its path and method
+				basePath = (String) intf.properties().get(HttpInterfaceModel.PROP_NAME_BASE_PATH);
 				lookupOp = ops.get(Constants.SERVICE_OP_LOOKUP);
 				break;
 			}
 		}
 
-		final String requestTarget = Utilities.stripEndSlash(request.getRequestURL().toString());
-		if (lookupOp == null || !request.getMethod().equalsIgnoreCase(lookupOp.method()) || !requestTarget.endsWith(lookupOp.path())) {
+		final String requestTarget = Utilities.stripEndSlash(request.getRequestURI());
+		if (lookupOp == null || basePath == null || !request.getMethod().equalsIgnoreCase(lookupOp.method()) || !requestTarget.equals(basePath + lookupOp.path())) {
 			// SR does not provide lookup operation or the request is not lookup
 			return false;
 		}
 
 		// is the requester looking for the identity service definition?
-
 		ServiceInstanceLookupRequestDTO dto = null; // expected type for service definition lookup
 		try {
 			// check if the content type can be mapped to the expected DTO
@@ -198,7 +219,7 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 			throw new AuthException("Invalid authorization header");
 		}
 
-		final String systemName = nameNormalizer.normalize(headerParts[1]);
+		final String systemName = systemNameNormalizer.normalize(headerParts[1]);
 		final String hash = headerParts[2].trim();
 
 		if (!secretKeys.containsKey(systemName)) {
@@ -212,8 +233,7 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 				// secret keys aren't the same
 				throw new AuthException("Invalid authorization header");
 			}
-		} catch (final InvalidKeyException | NoSuchAlgorithmException ex) {
-			// should never happen
+		} catch (final InvalidKeyException | NoSuchAlgorithmException | IllegalArgumentException ex) {
 			log.error(ex.getMessage());
 			log.debug(ex);
 
@@ -232,7 +252,7 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 			log.info("Authentication keys are supported.");
 
 			secretKeys = new ConcurrentHashMap<>(rawSecretKeys.size());
-			rawSecretKeys.forEach((name, secretKey) -> secretKeys.put(nameNormalizer.normalize(name), secretKey.trim()));
+			rawSecretKeys.forEach((name, secretKey) -> secretKeys.put(systemNameNormalizer.normalize(name), secretKey.trim()));
 		}
 	}
 

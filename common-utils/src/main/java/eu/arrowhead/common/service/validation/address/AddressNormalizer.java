@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.address;
 
 import java.util.ArrayList;
@@ -10,6 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.Utilities;
 
 @Component
@@ -20,7 +37,6 @@ public class AddressNormalizer {
 
 	private final Logger logger = LogManager.getLogger(this.getClass());
 
-	private static final String DOT = ".";
 	private static final String DASH = "-";
 	private static final String COLON = ":";
 	private static final String DOUBLE_COLON = "::";
@@ -45,18 +61,18 @@ public class AddressNormalizer {
 		}
 
 		final String candidate = address.toLowerCase().trim();
-		if (!candidate.contains(DOT) && !candidate.contains(COLON) && !candidate.contains(DASH)) {
+		if (!candidate.contains(Constants.DOT) && !candidate.contains(COLON) && !candidate.contains(DASH)) {
 			// Simple string
 			return candidate;
-		} else if (candidate.split("\\" + DOT).length == MAC_DOT_PARTS_LENGTH
+		} else if (candidate.split("\\" + Constants.DOT).length == MAC_DOT_PARTS_LENGTH
 				|| (candidate.contains(DASH) && candidate.split(DASH).length == MAC_DASH_OR_COLON_PARTS_LENGTH)
 				|| (!candidate.contains(DOUBLE_COLON) && candidate.split(COLON).length == MAC_DASH_OR_COLON_PARTS_LENGTH)) {
 			// Possible MAC address
 			return normalizeMAC(candidate);
-		} else if (candidate.contains(DOT) && !candidate.contains(COLON)) {
+		} else if (candidate.contains(Constants.DOT) && !candidate.contains(COLON)) {
 			// Possible IPv4 or domain name
 			return candidate;
-		} else if (!candidate.contains(DOT) && candidate.contains(COLON)) {
+		} else if (!candidate.contains(Constants.DOT) && candidate.contains(COLON)) {
 			// Possible IPv6
 			return normalizeIPv6(candidate);
 		} else {
@@ -82,8 +98,8 @@ public class AddressNormalizer {
 			groups = candidate.split(COLON);
 		}
 
-		if (candidate.contains(DOT)) {
-			final String flat = candidate.replace(DOT, "");
+		if (candidate.contains(Constants.DOT)) {
+			final String flat = candidate.replace(Constants.DOT, "");
 			if (flat.length() != MAC_DASH_OR_COLON_PARTS_LENGTH * MAC_DASH_OR_COLON_PART_CHAR_LENGTH) {
 				return candidate; // not MAC
 			}

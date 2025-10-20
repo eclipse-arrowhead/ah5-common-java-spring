@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.intf.properties.validators;
 
 import java.util.Collection;
@@ -12,8 +28,8 @@ import org.springframework.stereotype.Service;
 import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.exception.InvalidParameterException;
 import eu.arrowhead.common.intf.properties.IPropertyValidator;
-import eu.arrowhead.common.service.validation.name.NameNormalizer;
-import eu.arrowhead.common.service.validation.name.NameValidator;
+import eu.arrowhead.common.service.validation.name.ServiceOperationNameNormalizer;
+import eu.arrowhead.common.service.validation.name.ServiceOperationNameValidator;
 
 @Service
 public class NotEmptyStringSetValidator implements IPropertyValidator {
@@ -21,13 +37,13 @@ public class NotEmptyStringSetValidator implements IPropertyValidator {
 	//=================================================================================================
 	// members
 
-	private static final String ARG_NAME = "name";
+	public static final String ARG_OPERATION = "OPERATION";
 
 	@Autowired
-	private NameValidator nameValidator;
+	private ServiceOperationNameNormalizer operationNameNormalizer;
 
 	@Autowired
-	private NameNormalizer nameNormalizer;
+	private ServiceOperationNameValidator operationNameValidator;
 
 	private final Logger logger = LogManager.getLogger(getClass());
 
@@ -39,18 +55,19 @@ public class NotEmptyStringSetValidator implements IPropertyValidator {
 	public Object validateAndNormalize(final Object propertyValue, final String... args) throws InvalidParameterException {
 		logger.debug("NotEmptyStringSetValidator.validateAndNormalize started...");
 
-		if (propertyValue instanceof final Collection<?> set) {
-			if (set.isEmpty()) {
-				throw new InvalidParameterException("Property value should be a non-empty set");
+		if (propertyValue instanceof final Collection<?> collection) {
+			if (collection.isEmpty()) {
+				throw new InvalidParameterException("Property value should be a non-empty set/list");
 			}
 
-			final Set<String> normalized = new HashSet<>(set.size());
-			final boolean isName = (args.length > 0 ? args[0] : "").trim().equalsIgnoreCase(ARG_NAME);
-			for (final Object object : set) {
+			final Set<String> normalized = new HashSet<>(collection.size());
+			final boolean isOperation = (args.length > 0 ? args[0] : "").trim().equalsIgnoreCase(ARG_OPERATION);
+			for (final Object object : collection) {
 				if (object instanceof final String str) {
-					if (isName) {
-						nameValidator.validateName(str.trim());
-						normalized.add(nameNormalizer.normalize(str));
+					if (isOperation) {
+						final String normalizedStr = operationNameNormalizer.normalize(str);
+						operationNameValidator.validateServiceOperationName(normalizedStr);
+						normalized.add(normalizedStr);
 					} else {
 						if (Utilities.isEmpty(str)) {
 							throw new InvalidParameterException("Value should be a non-empty string");
@@ -65,6 +82,6 @@ public class NotEmptyStringSetValidator implements IPropertyValidator {
 			return normalized;
 		}
 
-		throw new InvalidParameterException("Property value should be a set of string values");
+		throw new InvalidParameterException("Property value should be a set/list of string values");
 	}
 }

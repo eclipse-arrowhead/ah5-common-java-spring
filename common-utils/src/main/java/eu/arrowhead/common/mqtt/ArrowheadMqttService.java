@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.mqtt;
 
 import java.nio.charset.StandardCharsets;
@@ -58,7 +74,6 @@ public class ArrowheadMqttService {
 		final String connectionId = calculateConnectionId(address, port, isSSl);
 
 		try {
-
 			// Find or create subscription handler
 			if (!subscriptionMap.containsKey(connectionId)) {
 				MqttClient client = mqttService.client(connectionId);
@@ -73,10 +88,9 @@ public class ArrowheadMqttService {
 
 			// Subscribe
 			return subscriptionHandler.addSubscription(topic);
-
 		} catch (final MqttException ex) {
 			logger.debug(ex);
-			throw new ExternalServerError("MQTT service publish failed: " + ex.getMessage());
+			throw new ExternalServerError("MQTT subscribe failed: " + ex.getMessage());
 		}
 	}
 
@@ -92,7 +106,7 @@ public class ArrowheadMqttService {
 		final String connectionId = calculateConnectionId(address, port, isSSl);
 
 		try {
-			if (subscriptionMap.containsKey(topic)) {
+			if (subscriptionMap.containsKey(connectionId)) {
 				final MqttSubscriptionHandler subscriptionHandler = subscriptionMap.get(connectionId);
 				subscriptionHandler.removeSubscription(topic);
 				if (Utilities.isEmpty(subscriptionHandler.getSubscribedTopics())) {
@@ -100,7 +114,6 @@ public class ArrowheadMqttService {
 					subscriptionMap.remove(connectionId);
 				}
 			}
-
 		} catch (final MqttException ex) {
 			logger.debug(ex);
 			throw new ExternalServerError("MQTT unsubscribe failed: " + ex.getMessage());
@@ -111,19 +124,19 @@ public class ArrowheadMqttService {
 	/**
 	 * Publish a non-response service message
 	 */
-	public void publish(final String topic, final String operation, final String sender, final MqttQoS qos, final Object payload) {
+	public void publish(final String baseTopic, final String operation, final String sender, final MqttQoS qos, final Object payload) {
 		logger.debug("publish started");
-		Assert.isTrue(!Utilities.isEmpty(topic), "topic is empty");
+		Assert.isTrue(!Utilities.isEmpty(baseTopic), "baseTopic is empty");
 		Assert.isTrue(!Utilities.isEmpty(operation), "operation is empty");
 
 		final MqttClient client = mqttService.client(Constants.MQTT_SERVICE_PROVIDING_BROKER_CONNECT_ID);
 		Assert.notNull(client, "Main broker is not initialized");
 
 		try {
-			final MqttPublishTemplate template = new MqttPublishTemplate(sender, operation, payload);
+			final MqttPublishTemplate template = new MqttPublishTemplate(sender, payload);
 			final MqttMessage msg = new MqttMessage(mapper.writeValueAsBytes(template));
 			msg.setQos(qos == null ? Constants.MQTT_DEFAULT_QOS : qos.value());
-			client.publish(topic, msg);
+			client.publish(baseTopic + operation, msg);
 		} catch (final JsonProcessingException ex) {
 			logger.debug(ex);
 			throw new InternalServerError("MQTT service publish message creation failed: " + ex.getMessage());

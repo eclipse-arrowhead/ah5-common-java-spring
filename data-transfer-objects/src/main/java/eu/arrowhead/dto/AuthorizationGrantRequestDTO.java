@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.dto;
 
 import java.util.HashMap;
@@ -10,14 +26,14 @@ public record AuthorizationGrantRequestDTO(
 		String targetType,
 		String target,
 		String description,
-		AuthorizationPolicyDTO defaultPolicy,
-		Map<String, AuthorizationPolicyDTO> scopedPolicies) {
+		AuthorizationPolicyRequestDTO defaultPolicy,
+		Map<String, AuthorizationPolicyRequestDTO> scopedPolicies) {
 
 	//=================================================================================================
 	// nested classes
 
 	//-------------------------------------------------------------------------------------------------
-	public class Builder {
+	public static class Builder {
 
 		//=================================================================================================
 		// members
@@ -26,8 +42,8 @@ public record AuthorizationGrantRequestDTO(
 		private final AuthorizationTargetType targetType;
 		private String target;
 		private String description;
-		private AuthorizationPolicyDTO defaultPolicy;
-		private Map<String, AuthorizationPolicyDTO> scopedPolicies;
+		private AuthorizationPolicyRequestDTO defaultPolicy;
+		private Map<String, AuthorizationPolicyRequestDTO> scopedPolicies;
 
 		//=================================================================================================
 		// methods
@@ -56,13 +72,13 @@ public record AuthorizationGrantRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder defaultPolicy(final AuthorizationPolicyDTO defaultPolicy) {
+		public Builder defaultPolicy(final AuthorizationPolicyRequestDTO defaultPolicy) {
 			this.defaultPolicy = defaultPolicy;
 			return this;
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder scopedPolicy(final String scope, final AuthorizationPolicyDTO policy) {
+		public Builder scopedPolicy(final String scope, final AuthorizationPolicyRequestDTO policy) {
 			if (this.scopedPolicies == null) {
 				this.scopedPolicies = new HashMap<>();
 			}
@@ -80,7 +96,7 @@ public record AuthorizationGrantRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder scopedPolicies(final Map<String, AuthorizationPolicyDTO> scopedPolicies) {
+		public Builder scopedPolicies(final Map<String, AuthorizationPolicyRequestDTO> scopedPolicies) {
 			this.scopedPolicies = scopedPolicies;
 			return this;
 		}

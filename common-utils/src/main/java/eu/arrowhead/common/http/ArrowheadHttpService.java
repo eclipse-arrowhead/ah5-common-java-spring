@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.http;
 
 import java.util.HashMap;
@@ -23,7 +39,7 @@ import eu.arrowhead.common.exception.InvalidParameterException;
 import eu.arrowhead.common.http.model.HttpInterfaceModel;
 import eu.arrowhead.common.http.model.HttpOperationModel;
 import eu.arrowhead.common.model.ServiceModel;
-import eu.arrowhead.common.service.validation.name.NameNormalizer;
+import eu.arrowhead.common.service.validation.name.ServiceOperationNameNormalizer;
 import jakarta.annotation.PostConstruct;
 
 @Service
@@ -44,7 +60,7 @@ public class ArrowheadHttpService {
 	private SystemInfo sysInfo;
 
 	@Autowired
-	private NameNormalizer nameNormalizer;
+	private ServiceOperationNameNormalizer operationNameNormalizer;
 
 	private String templateName;
 
@@ -65,11 +81,11 @@ public class ArrowheadHttpService {
 		logger.debug("consumeService started...");
 
 		if (Utilities.isEmpty(serviceDefinition)) {
-			throw new InvalidParameterException("Service definition is not specified.");
+			throw new InvalidParameterException("Service definition is not specified");
 		}
 
 		if (Utilities.isEmpty(operation)) {
-			throw new InvalidParameterException("Service operation is not specified.");
+			throw new InvalidParameterException("Service operation is not specified");
 		}
 
 		final ServiceModel model = collector.getServiceModel(serviceDefinition, templateName, providerName);
@@ -79,7 +95,7 @@ public class ArrowheadHttpService {
 
 		final HttpInterfaceModel interfaceModel = (HttpInterfaceModel) model.interfaces().get(0);
 
-		final String nOperation = nameNormalizer.normalize(operation);
+		final String nOperation = operationNameNormalizer.normalize(operation);
 		final HttpOperationModel operationModel = interfaceModel.operations().get(nOperation);
 		if (operationModel == null) {
 			throw new ExternalServerError("Service does not define the specified operation");
@@ -96,8 +112,13 @@ public class ArrowheadHttpService {
 		}
 
 		final String[] pathSegments = pathParams == null ? null : pathParams.toArray(String[]::new);
-		final UriComponents uri = HttpUtilities.createURI(interfaceModel.protocol(), interfaceModel.accessAddresses().get(0), interfaceModel.accessPort(), queryParams,
-				interfaceModel.basePath() + operationModel.path(), pathSegments);
+		final UriComponents uri = HttpUtilities.createURI(
+				interfaceModel.protocol(),
+				interfaceModel.accessAddresses().get(0),
+				interfaceModel.accessPort(),
+				queryParams,
+				interfaceModel.basePath() + operationModel.path(),
+				pathSegments);
 
 		return httpService.sendRequest(uri, HttpMethod.valueOf(operationModel.method()), responseType, payload, null, actualHeaders);
 	}

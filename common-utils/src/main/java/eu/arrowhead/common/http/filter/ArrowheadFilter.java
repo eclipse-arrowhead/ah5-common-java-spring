@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.http.filter;
 
 import java.io.IOException;
@@ -17,7 +33,6 @@ import eu.arrowhead.common.http.HttpUtilities;
 import eu.arrowhead.dto.ErrorMessageDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -60,7 +75,7 @@ public abstract class ArrowheadFilter extends OncePerRequestFilter {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	protected void handleException(final ArrowheadException ex, final ServletResponse response) throws IOException {
+	protected void handleException(final ArrowheadException ex, final HttpServletResponse response) throws IOException {
 		final String origin = ex.getOrigin() == null ? Constants.UNKNOWN : ex.getOrigin();
 		log.debug("{} at {}: {}", ex.getClass().getName(), origin, ex.getMessage());
 		log.debug("Exception", ex);
@@ -68,7 +83,7 @@ public abstract class ArrowheadFilter extends OncePerRequestFilter {
 		final HttpStatus status = HttpUtilities.calculateHttpStatusFromArrowheadException(ex);
 		final ErrorMessageDTO dto = HttpUtilities.createErrorMessageDTO(ex);
 
-		sendError(status, dto, (HttpServletResponse) response);
+		sendError(status, dto, response);
 	}
 
 	//-------------------------------------------------------------------------------------------------

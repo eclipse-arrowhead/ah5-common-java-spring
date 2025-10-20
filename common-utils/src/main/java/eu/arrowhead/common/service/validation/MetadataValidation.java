@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation;
 
 import java.util.List;
@@ -10,7 +26,8 @@ public final class MetadataValidation {
 	//=================================================================================================
 	// members
 
-	public static final String DOT = ".";
+	public static final String METADATA_COMPOSITE_KEY_DELIMITER = ".";
+	public static final String METADATA_COMPOSITE_KEY_DELIMITER_REGEXP = "\\.";
 
 	//=================================================================================================
 	// methods
@@ -31,8 +48,8 @@ public final class MetadataValidation {
 			for (final String key : map.keySet()) {
 
 				// check the key
-				if (key.contains(DOT)) {
-					throw new InvalidParameterException("Invalid metadata key: " + key + ", it should not contain " + DOT + " character!");
+				if (key.contains(METADATA_COMPOSITE_KEY_DELIMITER)) {
+					throw new InvalidParameterException("Invalid metadata key: " + key + ", it should not contain " + METADATA_COMPOSITE_KEY_DELIMITER + " character");
 				}
 
 				// check the value

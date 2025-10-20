@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation;
 
 import java.util.List;
@@ -30,11 +46,11 @@ public class ConfigValidation {
 		logger.debug("validateConfigKeyList started");
 
 		if (Utilities.isEmpty(keys)) {
-			throw new InvalidParameterException("The list of the requested configuration keys is null or empty!");
+			throw new InvalidParameterException("The list of the requested configuration keys is null or empty");
 		}
 
 		if (Utilities.containsNullOrEmpty(keys)) {
-			throw new InvalidParameterException("The list of the requested configuration keys contains a null or empty value!");
+			throw new InvalidParameterException("The list of the requested configuration keys contains a null or empty value");
 		}
 	}
 

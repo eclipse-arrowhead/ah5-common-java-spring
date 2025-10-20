@@ -1,7 +1,24 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.http.filter.authentication;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 
@@ -10,6 +27,7 @@ import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.http.filter.ArrowheadFilter;
+import eu.arrowhead.common.service.validation.name.SystemNameNormalizer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +35,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Order(Constants.REQUEST_FILTER_ORDER_AUTHENTICATION)
 public class SelfDeclaredFilter extends ArrowheadFilter implements IAuthenticationPolicyFilter {
+
+	//=================================================================================================
+	// members
+
+	@Autowired
+	private SystemNameNormalizer systemNameNormalizer;
 
 	//=================================================================================================
 	// assistant methods
@@ -31,7 +55,7 @@ public class SelfDeclaredFilter extends ArrowheadFilter implements IAuthenticati
 
 			final String systemName = processAuthHeader(request);
 			request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_AUTHENTICATED_SYSTEM, systemName);
-			request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_SYSOP_REQUEST, Constants.SYSOP.equals(systemName.toLowerCase().trim()));
+			request.setAttribute(Constants.HTTP_ATTR_ARROWHEAD_SYSOP_REQUEST, Constants.SYSOP.equals(systemName));
 
 			chain.doFilter(request, response);
 		} catch (final ArrowheadException ex) {
@@ -58,6 +82,6 @@ public class SelfDeclaredFilter extends ArrowheadFilter implements IAuthenticati
 			throw new AuthException("Invalid authorization header");
 		}
 
-		return split[1];
+		return systemNameNormalizer.normalize(split[1]);
 	}
 }

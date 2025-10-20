@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.quartz;
 
 import java.time.ZonedDateTime;
@@ -82,6 +98,7 @@ public class OutsourcedLoginJob implements Job {
 			systemInfo.getArrowheadContext().put(Constants.KEY_IDENTITY_TOKEN, response.token());
 			final ZonedDateTime renewalThreshold = expiration.minus(MULTIPLICATOR * interval + 1, ChronoUnit.MILLIS);
 			systemInfo.getArrowheadContext().put(Constants.KEY_IDENTITY_RENEWAL_THRESHOLD, renewalThreshold);
+			logger.info("(Re-)Login is successful");
 		} catch (final AuthException ex) {
 			logger.error("After login, the Authentication server responds with: {}", ex.getMessage());
 			logger.debug(ex);

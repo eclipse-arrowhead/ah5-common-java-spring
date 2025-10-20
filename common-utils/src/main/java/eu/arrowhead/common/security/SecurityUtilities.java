@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.security;
 
 import java.nio.charset.StandardCharsets;
@@ -22,10 +38,12 @@ import javax.security.auth.x500.X500Principal;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
 
 import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.Utilities;
+import eu.arrowhead.common.service.validation.cloud.CloudIdentifierNormalizer;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -37,7 +55,6 @@ public final class SecurityUtilities {
 	private static final String COMMON_NAME_FIELD_NAME = "CN";
 	private static final String DN_QUALIFIER_FIELD_NAME = "2.5.4.46";
 	private static final String X509_CN_DELIMITER = "\\.";
-	private static final int SYSTEM_CN_NAME_LENGTH = 5;
 
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
 
@@ -154,7 +171,7 @@ public final class SecurityUtilities {
 		}
 
 		final String[] cnFields = commonName.split(X509_CN_DELIMITER, 0);
-		return cnFields.length == SYSTEM_CN_NAME_LENGTH;
+		return cnFields.length == Constants.SYSTEM_CERT_CN_LENGTH;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -166,16 +183,6 @@ public final class SecurityUtilities {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	public static boolean isClientInTheLocalCloudByCNs(final String clientCN, final String cloudCN) {
-		if (Utilities.isEmpty(clientCN) || Utilities.isEmpty(cloudCN)) {
-			return false;
-		}
-
-		final String[] fields = clientCN.split(X509_CN_DELIMITER, 2); // valid clientFields contains clientName, <cloudName>.<organization>.<two parts of the master certificate, eg. arrowhead.eu>
-		return fields.length >= 2 && cloudCN.equalsIgnoreCase(fields[1]);
-	}
-
-	//-------------------------------------------------------------------------------------------------
 	@Nullable
 	public static String getClientNameFromClientCN(final String clientCN) {
 		if (clientCN == null) {
@@ -183,6 +190,32 @@ public final class SecurityUtilities {
 		}
 
 		return clientCN.split(X509_CN_DELIMITER, 2)[0];
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public static boolean isClientInTheLocalCloudByCNs(final ApplicationContext appContext, final String clientCN, final String cloudCN) {
+		if (appContext == null || Utilities.isEmpty(clientCN) || Utilities.isEmpty(cloudCN)) {
+			return false;
+		}
+
+		final CloudIdentifierNormalizer cloudIdentifierNormalizer = appContext.getBean(CloudIdentifierNormalizer.class);
+		if (cloudIdentifierNormalizer == null) {
+			return false;
+		}
+
+		String[] fields = clientCN.split(X509_CN_DELIMITER); // valid clientCN contains <clientName>.<cloudName>.<organization>.<two parts of the master certificate, eg. arrowhead.eu>
+		if (fields.length != Constants.SYSTEM_CERT_CN_LENGTH) {
+			return false;
+		}
+		final String clientCloudId = cloudIdentifierNormalizer.normalize(fields[1] + Constants.COMPOSITE_ID_DELIMITER + fields[2]);
+
+		fields = cloudCN.split(X509_CN_DELIMITER); // valid cloudCN contains <cloudName>.<organization>.<two parts of the master certificate, eg. arrowhead.eu>
+		if (fields.length != Constants.CLOUD_CERT_CN_LENGTH) {
+			return false;
+		}
+		final String cloudId = cloudIdentifierNormalizer.normalize(fields[0] + Constants.COMPOSITE_ID_DELIMITER + fields[1]);
+
+		return cloudId.equals(clientCloudId);
 	}
 
 	//-------------------------------------------------------------------------------------------------

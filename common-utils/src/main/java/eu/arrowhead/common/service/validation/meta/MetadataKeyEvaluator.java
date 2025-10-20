@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.meta;
 
 import java.util.List;
@@ -5,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import eu.arrowhead.common.Utilities;
+import eu.arrowhead.common.service.validation.MetadataValidation;
 import jakarta.annotation.Nullable;
 
 public final class MetadataKeyEvaluator {
@@ -12,7 +29,6 @@ public final class MetadataKeyEvaluator {
 	//=================================================================================================
 	// members
 
-	private static final String DELIMITER = "\\.";
 	private static final String IDX_PREFIX = "[";
 	private static final String IDX_SUFFIX = "]";
 
@@ -27,7 +43,7 @@ public final class MetadataKeyEvaluator {
 		}
 
 		Object result = metadata;
-		final String[] parts = compositeKey.trim().split(DELIMITER);
+		final String[] parts = compositeKey.trim().split(MetadataValidation.METADATA_COMPOSITE_KEY_DELIMITER_REGEXP);
 		for (final String key : parts) {
 			result = getValueForKey(result, key);
 			if (result == null) {
@@ -54,7 +70,7 @@ public final class MetadataKeyEvaluator {
 					if (map.containsKey(pair.getKey())) {
 						// map value has to be a list
 						final List<?> list = castToList(map.get(pair.getKey()));
-						if (list.size() > pair.getValue()) {
+						if (list != null && list.size() > pair.getValue()) {
 							return list.get(pair.getValue().intValue());
 						}
 					}
@@ -80,7 +96,7 @@ public final class MetadataKeyEvaluator {
 		final int openIdx = key.indexOf(IDX_PREFIX);
 		final int endIdx = key.indexOf(IDX_SUFFIX);
 
-		return openIdx != -1 && endIdx == key.length() - 1 && endIdx > openIdx && openIdx != endIdx - 1;
+		return openIdx != -1 && endIdx == key.length() - 1 && openIdx != endIdx - 1;
 	}
 
 	//-------------------------------------------------------------------------------------------------

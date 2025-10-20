@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.collector;
 
 import java.util.Map;
@@ -12,7 +28,9 @@ import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.model.ServiceModel;
-import eu.arrowhead.common.service.validation.name.NameNormalizer;
+import eu.arrowhead.common.service.validation.name.InterfaceTemplateNameNormalizer;
+import eu.arrowhead.common.service.validation.name.ServiceDefinitionNameNormalizer;
+import eu.arrowhead.common.service.validation.name.SystemNameNormalizer;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
@@ -29,7 +47,13 @@ public class ServiceCollector {
 	private ICollectorDriver driver;
 
 	@Autowired
-	private NameNormalizer nameNormalizer;
+	private ServiceDefinitionNameNormalizer serviceDefNameNormalizer;
+
+	@Autowired
+	private InterfaceTemplateNameNormalizer interfaceTemplateNameNormalizer;
+
+	@Autowired
+	private SystemNameNormalizer systemNameNormalizer;
 
 	@Resource(name = Constants.ARROWHEAD_CONTEXT)
 	private Map<String, Object> arrowheadContext;
@@ -44,12 +68,13 @@ public class ServiceCollector {
 		Assert.isTrue(!Utilities.isEmpty(serviceDefinition), "service definition is empty");
 		Assert.isTrue(!Utilities.isEmpty(templateName), "template name is empty");
 
-		final String nServiceDefinition = nameNormalizer.normalize(serviceDefinition);
-		final String nTemplateName = nameNormalizer.normalize(templateName);
-		final String nProviderName =  !Utilities.isEmpty(providerName) ? nameNormalizer.normalize(providerName) : null;
+		final String nServiceDefinition = serviceDefNameNormalizer.normalize(serviceDefinition);
 
 		final String key = Constants.KEY_PREFIX_FOR_SERVICE_MODEL + nServiceDefinition;
 		if (!arrowheadContext.containsKey(key)) {
+			final String nTemplateName = interfaceTemplateNameNormalizer.normalize(templateName);
+			final String nProviderName = !Utilities.isEmpty(providerName) ? systemNameNormalizer.normalize(providerName) : null;
+
 			final ServiceModel model = driver.acquireService(nServiceDefinition, nTemplateName, nProviderName);
 			if (model != null) {
 				arrowheadContext.put(key, model);

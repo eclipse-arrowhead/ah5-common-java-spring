@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.http;
 
 import java.util.ArrayList;
@@ -26,6 +42,7 @@ import eu.arrowhead.common.exception.InvalidParameterException;
 import eu.arrowhead.common.exception.LockedException;
 import eu.arrowhead.common.exception.TimeoutException;
 import eu.arrowhead.dto.ErrorMessageDTO;
+import eu.arrowhead.dto.enums.ExceptionType;
 import jakarta.servlet.http.HttpServletRequest;
 
 public final class HttpUtilities {
@@ -40,35 +57,12 @@ public final class HttpUtilities {
 
 	//-------------------------------------------------------------------------------------------------
 	public static HttpStatus calculateHttpStatusFromArrowheadException(final ArrowheadException ex) {
-		Assert.notNull(ex, "Exception is null.");
+		Assert.notNull(ex, "Exception is null");
 
-		HttpStatus status = HttpStatus.resolve(ex.getExceptionType().getErrorCode());
+		final ExceptionType exceptionType = ex.getExceptionType() != null ? ex.getExceptionType() : ExceptionType.INTERNAL_SERVER_ERROR;
+		HttpStatus status = HttpStatus.resolve(exceptionType.getErrorCode());
 		if (status == null) {
-			switch (ex.getExceptionType()) {
-			case AUTH:
-				status = HttpStatus.UNAUTHORIZED;
-				break;
-			case FORBIDDEN:
-				status = HttpStatus.FORBIDDEN;
-				break;
-			case INVALID_PARAMETER:
-				status = HttpStatus.BAD_REQUEST;
-				break;
-			case DATA_NOT_FOUND:
-				status = HttpStatus.NOT_FOUND;
-				break;
-			case EXTERNAL_SERVER_ERROR:
-				status = HttpStatus.SERVICE_UNAVAILABLE;
-				break;
-			case TIMEOUT:
-				status = HttpStatus.REQUEST_TIMEOUT;
-				break;
-			case LOCKED:
-				status = HttpStatus.LOCKED;
-				break;
-			default:
-				status = HttpStatus.INTERNAL_SERVER_ERROR;
-			}
+			status = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
 
 		return status;
@@ -80,8 +74,17 @@ public final class HttpUtilities {
 	}
 
 	//-------------------------------------------------------------------------------------------------
+	public static ErrorMessageDTO createErrorMessageDTO(final ArrowheadException ex, final String origin) {
+		return new ErrorMessageDTO(
+				ex.getMessage(),
+				calculateHttpStatusFromArrowheadException(ex).value(),
+				ex.getExceptionType(),
+				Utilities.isEmpty(origin) ? ex.getOrigin() : origin);
+	}
+
+	//-------------------------------------------------------------------------------------------------
 	public static ArrowheadException createExceptionFromErrorMessageDTO(final ErrorMessageDTO dto) {
-		Assert.notNull(dto, "Error message object is null.");
+		Assert.notNull(dto, "Error message object is null");
 
 		if (dto.exceptionType() == null) {
 			return new ArrowheadException(dto.errorMessage(), dto.origin());
@@ -211,7 +214,9 @@ public final class HttpUtilities {
 		if (!Utilities.isEmpty(str)) {
 			final HttpMethod method = HttpMethod.valueOf(str.toUpperCase().trim());
 
-			return Arrays.stream(HttpMethod.values()).anyMatch(method::equals);
+			return Arrays
+					.stream(HttpMethod.values())
+					.anyMatch(method::equals);
 		}
 
 		return false;

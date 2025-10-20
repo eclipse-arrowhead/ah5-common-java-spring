@@ -1,15 +1,34 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 import eu.arrowhead.common.collector.HttpCollectorDriver;
 import eu.arrowhead.common.collector.ICollectorDriver;
@@ -21,11 +40,16 @@ import eu.arrowhead.common.http.filter.authentication.IAuthenticationPolicyFilte
 import eu.arrowhead.common.http.filter.authentication.OutsourcedFilter;
 import eu.arrowhead.common.http.filter.authentication.SelfDeclaredFilter;
 import eu.arrowhead.common.http.filter.authorization.ManagementServiceFilter;
+import eu.arrowhead.common.mqtt.MqttResourceManager;
 import eu.arrowhead.common.mqtt.filter.ArrowheadMqttFilter;
 import eu.arrowhead.common.mqtt.filter.authentication.CertificateMqttFilter;
 import eu.arrowhead.common.mqtt.filter.authentication.OutsourcedMqttFilter;
 import eu.arrowhead.common.mqtt.filter.authentication.SelfDeclaredMqttFilter;
 import eu.arrowhead.common.mqtt.filter.authorization.ManagementServiceMqttFilter;
+import eu.arrowhead.common.mqtt.handler.MqttMessageContainerHandler;
+import eu.arrowhead.common.mqtt.handler.MqttMessageContainerHandlerContext;
+import eu.arrowhead.common.mqtt.handler.MqttTopicHandler;
+import eu.arrowhead.common.mqtt.model.MqttMessageContainer;
 
 @Configuration
 public class CommonBeanConfig {
@@ -112,5 +136,18 @@ public class CommonBeanConfig {
 	@Bean
 	ICollectorDriver getDefaultCollectorDriver() {
 		return new HttpCollectorDriver();
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Bean
+	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+	MqttMessageContainerHandler createMqttMessageContainerHandler(final MqttTopicHandler topicHandler, final MqttMessageContainer msgContainer, final MqttResourceManager resourceManager) {
+		return new MqttMessageContainerHandler(topicHandler, msgContainer, resourceManager);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Bean
+	Function<MqttMessageContainerHandlerContext, MqttMessageContainerHandler> mqttMessageContainerHandlerFactory() {
+		return context -> createMqttMessageContainerHandler(context.topicHandler(), context.msgContainer(), context.resourceManager());
 	}
 }

@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.mqtt;
 
 import java.util.Optional;
@@ -16,7 +32,6 @@ import org.springframework.util.Assert;
 
 import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.SystemInfo;
-import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.exception.ExternalServerError;
 import eu.arrowhead.common.model.InterfaceModel;
 import eu.arrowhead.common.model.ServiceModel;
@@ -61,23 +76,20 @@ public class MqttController {
 
 		final MqttInterfaceModel interfaceModel = (MqttInterfaceModel) optional.get();
 
-		String topic = "";
 		try {
 			if (client == null) {
 				initMqttClient(interfaceModel.accessAddresses().getFirst(), interfaceModel.accessPort());
 			}
 
 			for (final String operation : interfaceModel.operations()) {
-				topic = interfaceModel.baseTopic() + operation;
+				final String topic = interfaceModel.baseTopic() + operation;
 				mqttDispatcher.addTopic(topic);
 				client.subscribe(topic);
 			}
 		} catch (final MqttException ex) {
 			logger.debug(ex);
-			if (!Utilities.isEmpty(topic)) {
-				mqttDispatcher.revokeTopic(topic);
-			}
-			throw new ExternalServerError("MQTT service listener creation failed: " + ex.getMessage());
+			mqttDispatcher.revokeBaseTopic(interfaceModel.baseTopic());
+			throw new ExternalServerError("MQTT service listener creation failed for '" + model.serviceDefinition() + "': " + ex.getMessage());
 		}
 	}
 
@@ -87,7 +99,7 @@ public class MqttController {
 		Assert.notNull(client, "client is null");
 
 		try {
-			final String[] topics = mqttDispatcher.getTopicSet().toArray(new String[0]);
+			final String[] topics = mqttDispatcher.getFullTopicSet().toArray(new String[0]);
 			client.unsubscribe(topics);
 			mqttService.disconnect(Constants.MQTT_SERVICE_PROVIDING_BROKER_CONNECT_ID);
 		} catch (final MqttException ex) {

@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common;
 
 import java.lang.reflect.Field;
@@ -21,7 +37,7 @@ import eu.arrowhead.common.http.filter.authorization.ManagementPolicy;
 import eu.arrowhead.common.model.ServiceModel;
 import eu.arrowhead.common.model.SystemModel;
 import eu.arrowhead.common.service.validation.address.AddressNormalizer;
-import eu.arrowhead.common.service.validation.name.NameNormalizer;
+import eu.arrowhead.common.service.validation.name.SystemNameNormalizer;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 
@@ -44,10 +60,10 @@ public abstract class SystemInfo {
 	@Value(Constants.$DOMAIN_NAME)
 	private String domainAddress;
 
-	@Value(Constants.$SERVICEREGISTRY_ADDRESS_WD)
+	@Value(Constants.$SERVICE_REGISTRY_ADDRESS_WD)
 	private String serviceRegistryAddress;
 
-	@Value(Constants.$SERVICEREGISTRY_PORT_WD)
+	@Value(Constants.$SERVICE_REGISTRY_PORT_WD)
 	private int serviceRegistryPort;
 
 	@Value(Constants.$AUTHENTICATION_POLICY_WD)
@@ -66,6 +82,10 @@ public abstract class SystemInfo {
 	private List<String> managementWhitelist;
 	private final List<String> normalizedManagementWhitelist = new ArrayList<>();
 
+	@Value(Constants.$BLACKLIST_CHECK_EXCLUDE_LIST_WD)
+	private List<String> blacklistCheckExcludeList;
+	private final List<String> normalizedBlacklistCheckExcludeList = new ArrayList<>();
+
 	@Value(Constants.$MQTT_API_ENABLED_WD)
 	private boolean mqttEnabled;
 
@@ -73,7 +93,7 @@ public abstract class SystemInfo {
 	private String mqttBrokerAddress;
 
 	@Value(Constants.$MQTT_BROKER_PORT_WD)
-	private int mqttBrokerPort;
+	private Integer mqttBrokerPort;
 
 	@Value(Constants.$MQTT_CLIENT_PASSWORD)
 	private String mqttClientPassword;
@@ -82,10 +102,10 @@ public abstract class SystemInfo {
 	private SSLProperties sslProperties;
 
 	@Autowired
-	private AddressNormalizer addressNormalizer;
+	protected SystemNameNormalizer systemNameNormalizer;
 
 	@Autowired
-	private NameNormalizer nameNormalizer;
+	private AddressNormalizer addressNormalizer;
 
 	@Resource(name = Constants.ARROWHEAD_CONTEXT)
 	private Map<String, Object> arrowheadContext;
@@ -114,11 +134,30 @@ public abstract class SystemInfo {
 		if (!Utilities.isEmpty(managementWhitelist) && Utilities.isEmpty(normalizedManagementWhitelist)) {
 			for (final String name : managementWhitelist) {
 				if (!Utilities.isEmpty(name)) {
-					normalizedManagementWhitelist.add(nameNormalizer.normalize(name));
+					normalizedManagementWhitelist.add(systemNameNormalizer.normalize(name));
 				}
 			}
 		}
+
 		return normalizedManagementWhitelist;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public List<String> getBlacklistCheckExcludeList() {
+		if (!Utilities.isEmpty(blacklistCheckExcludeList) && Utilities.isEmpty(normalizedBlacklistCheckExcludeList)) {
+			for (final String name : blacklistCheckExcludeList) {
+				if (!Utilities.isEmpty(name)) {
+					normalizedBlacklistCheckExcludeList.add(systemNameNormalizer.normalize(name));
+				}
+			}
+		}
+
+		return normalizedBlacklistCheckExcludeList;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public boolean isSslEnabled() {
+		return sslProperties != null && sslProperties.isSslEnabled();
 	}
 
 	//=================================================================================================
@@ -151,7 +190,7 @@ public abstract class SystemInfo {
 	@PostConstruct
 	private void init() {
 		if (Utilities.isEmpty(getSystemName())) {
-			throw new InvalidParameterException("'systemName' is missing or empty");
+			throw new InvalidParameterException("System name is missing or empty");
 		}
 
 		if (Utilities.isEmpty(domainAddress)) {
@@ -160,6 +199,10 @@ public abstract class SystemInfo {
 
 		if (mqttEnabled && Utilities.isEmpty(mqttBrokerAddress)) {
 			throw new InvalidParameterException("MQTT Broker address is not defined");
+		}
+
+		if (mqttEnabled && mqttBrokerPort == null) {
+			throw new InvalidParameterException("MQTT Broker port is not defined");
 		}
 
 		if (AuthenticationPolicy.OUTSOURCED == authenticationPolicy && Utilities.isEmpty(authenticatorCredentials)) {
@@ -175,7 +218,7 @@ public abstract class SystemInfo {
 	private void collectConfigDefaults() {
 		final PublicConfigurationKeysAndDefaults configInfo = getPublicConfigurationKeysAndDefaults();
 		if (configInfo != null && configInfo.defaultsClass() != null && !Utilities.isEmpty(configInfo.configKeys())) {
-			final Class<?> defaults = configInfo.defaultsClass;
+			final Class<?> defaults = configInfo.defaultsClass();
 			final Set<String> configKeys = configInfo.configKeys();
 
 			final Map<String, String> defaultsMap = new HashMap<>(configKeys.size());
@@ -194,7 +237,7 @@ public abstract class SystemInfo {
 					defaultsMap.put(key, null);
 				} catch (final IllegalArgumentException __) {
 					// never happens
-					throw new IllegalStateException("Something that should never happen, happened.");
+					throw new IllegalStateException("Something that should never happen, happened");
 				} catch (final IllegalAccessException ex) {
 					throw new ServiceConfigurationError("Java security does not allow to read the default values from class " + defaults.getName());
 				}
@@ -273,7 +316,7 @@ public abstract class SystemInfo {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	public int getMqttBrokerPort() {
+	public Integer getMqttBrokerPort() {
 		return this.mqttBrokerPort;
 	}
 
@@ -285,11 +328,6 @@ public abstract class SystemInfo {
 	//-------------------------------------------------------------------------------------------------
 	public Map<String, Object> getArrowheadContext() {
 		return arrowheadContext;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	public boolean isSslEnabled() {
-		return sslProperties != null && sslProperties.isSslEnabled();
 	}
 
 	//-------------------------------------------------------------------------------------------------

@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common;
 
 import java.io.IOException;
@@ -99,7 +115,7 @@ public final class Utilities {
 		try {
 			return mapper.writeValueAsString(object);
 		} catch (final JsonProcessingException ex) {
-			throw new ArrowheadException("The specified object cannot be converted to text.", ex);
+			throw new ArrowheadException("The specified object cannot be converted to text", ex);
 		}
 	}
 
@@ -113,7 +129,7 @@ public final class Utilities {
 		try {
 			return mapper.readValue(json, parsedClass);
 		} catch (final IOException ex) {
-			throw new ArrowheadException("The specified string cannot be converted to a(n) " + parsedClass.getSimpleName() + " object.", ex);
+			throw new ArrowheadException("The specified string cannot be converted to a(n) " + parsedClass.getSimpleName() + " object", ex);
 		}
 	}
 
@@ -127,7 +143,7 @@ public final class Utilities {
 		try {
 			return mapper.readValue(json, reference);
 		} catch (final IOException ex) {
-			throw new ArrowheadException("The specified string cannot be converted to a(n) " + reference.getType() + " object.", ex);
+			throw new ArrowheadException("The specified string cannot be converted to a(n) " + reference.getType() + " object", ex);
 		}
 	}
 
@@ -228,6 +244,8 @@ public final class Utilities {
 	//-------------------------------------------------------------------------------------------------
 	@SuppressWarnings("checkstyle:MagicNumber")
 	public static String bytesToHex(final byte[] bytes) {
+		Assert.notNull(bytes, "bytes array is null");
+
 		final StringBuilder hexString = new StringBuilder(2 * bytes.length);
 		for (final byte b : bytes) {
 			final String hex = Integer.toHexString(0xff & b);

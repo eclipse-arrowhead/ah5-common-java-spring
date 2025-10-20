@@ -1,8 +1,25 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.swagger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import eu.arrowhead.common.Constants;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -46,11 +63,11 @@ public abstract class DefaultSwaggerConfig implements WebMvcConfigurer {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	// TODO: add Licence name here
 	protected License apiLicence() {
 		return new License()
-				.name("Licence: TODO")
-				.url("");
+				.name("Eclipse Public License 2.0")
+				.url("http://www.eclipse.org/legal/epl-2.0")
+				.identifier("EPL-2.0");
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -63,6 +80,6 @@ public abstract class DefaultSwaggerConfig implements WebMvcConfigurer {
 
 	//-------------------------------------------------------------------------------------------------
 	protected String getVersion() {
-		return "5.0.0";
+		return Constants.AH_FRAMEWORK_VERSION;
 	}
 }

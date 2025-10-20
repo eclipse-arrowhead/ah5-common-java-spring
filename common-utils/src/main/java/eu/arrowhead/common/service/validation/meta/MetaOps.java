@@ -1,3 +1,19 @@
+/*******************************************************************************
+ *
+ * Copyright (c) 2025 AITIA
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ *
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *  	AITIA - implementation
+ *  	Arrowhead Consortia - conceptualization
+ *
+ *******************************************************************************/
 package eu.arrowhead.common.service.validation.meta;
 
 import eu.arrowhead.common.service.validation.meta.evaluator.EndsWithEvaluator;
@@ -11,6 +27,7 @@ import eu.arrowhead.common.service.validation.meta.evaluator.IncludesEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.IncludesIgnoreCaseEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.LessThanEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.LessThanOrEqualsToEvaluator;
+import eu.arrowhead.common.service.validation.meta.evaluator.ListContainsAnyEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.ListContainsEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.NotEvaluator;
 import eu.arrowhead.common.service.validation.meta.evaluator.RegExpEvaluator;
@@ -54,6 +71,10 @@ public enum MetaOps {
 	// list - any
 	CONTAINS(new ListContainsEvaluator()),
 	NOT_CONTAINS(new NotEvaluator(new ListContainsEvaluator())),
+
+	// list - list
+	CONTAINS_ANY(new ListContainsAnyEvaluator()),
+	NOT_CONTAINS_ANY(new NotEvaluator(new ListContainsAnyEvaluator())),
 
 	// any - list
 	IN(new InEvaluator()),
