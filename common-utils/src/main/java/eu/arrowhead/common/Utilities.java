@@ -80,19 +80,6 @@ public final class Utilities {
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	public static boolean allEmpty(final Collection<?>... collections) {
-		Assert.notNull(collections, "collections is null");
-
-		for (final Collection<?> c : collections) {
-
-			if (!Utilities.isEmpty(c)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	//-------------------------------------------------------------------------------------------------
 	public static boolean containsNullOrEmpty(final Iterable<String> iterable) {
 		Assert.notNull(iterable, "iterable is null");
 

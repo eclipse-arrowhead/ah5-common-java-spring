@@ -92,9 +92,6 @@ public final class Constants {
 	public static final String COMPOSITE_ID_DELIMITER = "|";
 	public static final String COMPOSITE_ID_DELIMITER_REGEXP = "\\|";
 
-	// Naming convention related
-	public static final String NAME_SEPARATOR = "\\|";
-
 	// System related
 
 	public static final String BEAN_NAME_SYSTEM_INFO = "systemInfo";
