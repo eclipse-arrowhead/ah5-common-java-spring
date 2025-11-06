@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record OrchestrationSimpleStoreQueryRequestDTO(
 		PageDTO pagination,
-		List<UUID> ids,
+		List<String> ids,
 		List<String> consumerNames,
 		List<String> serviceDefinitions,
 		List<String> serviceInstanceIds,
