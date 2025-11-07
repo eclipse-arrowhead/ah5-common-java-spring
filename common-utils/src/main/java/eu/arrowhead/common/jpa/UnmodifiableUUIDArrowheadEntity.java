@@ -13,7 +13,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 
 @MappedSuperclass
-public class UnmodifiableUUIDArrowheadEntity {
+public abstract class UnmodifiableUUIDArrowheadEntity {
 	//=================================================================================================
 	// members
 
@@ -31,29 +31,6 @@ public class UnmodifiableUUIDArrowheadEntity {
 	@PrePersist
 	public void onCreate() {
 		this.createdAt = Utilities.utcNow();
-	}
-
-	//=================================================================================================
-	// boilerplate
-
-	//-------------------------------------------------------------------------------------------------
-	public UUID getId() {
-		return id;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	public void setId(final UUID id) {
-		this.id = id;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	public ZonedDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	public void setCreatedAt(final ZonedDateTime createdAt) {
-		this.createdAt = createdAt;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -79,5 +56,28 @@ public class UnmodifiableUUIDArrowheadEntity {
 
 		final UnmodifiableUUIDArrowheadEntity other = (UnmodifiableUUIDArrowheadEntity) obj;
 		return id == other.id;
+	}
+
+	//=================================================================================================
+	// boilerplate
+
+	//-------------------------------------------------------------------------------------------------
+	public UUID getId() {
+		return id;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public void setId(final UUID id) {
+		this.id = id;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public ZonedDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public void setCreatedAt(final ZonedDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
 }

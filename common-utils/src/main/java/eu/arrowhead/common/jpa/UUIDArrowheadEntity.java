@@ -9,7 +9,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 @MappedSuperclass
-public class UUIDArrowheadEntity extends UnmodifiableUUIDArrowheadEntity {
+public abstract class UUIDArrowheadEntity extends UnmodifiableUUIDArrowheadEntity {
 	//=================================================================================================
 	// members
 
