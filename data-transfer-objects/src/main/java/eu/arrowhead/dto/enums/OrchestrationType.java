@@ -14,7 +14,7 @@
  *  	Arrowhead Consortia - conceptualization
  *
  *******************************************************************************/
-package eu.arrowhead.common.service.enums;
+package eu.arrowhead.dto.enums;
 
 public enum OrchestrationType {
     PULL, PUSH;
