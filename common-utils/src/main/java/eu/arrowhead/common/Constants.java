@@ -299,6 +299,8 @@ public final class Constants {
 
 	public static final String SERVICE_DEF_INTERFACE_BRIDGE_MANAGEMENT = "interfaceBridgeManagement";
 	public static final String SERVICE_DEF_DATA_MODEL_TRANSLATION = "dataModelTranslation";
+	
+	public static final String SERVICE_DEF_QUALITY_EVALUATION = "qualityEvaluation";
 
 	// Operation related
 
@@ -320,6 +322,8 @@ public final class Constants {
 	public static final String SERVICE_OP_NEGOTIATION = "negotiation";
 	public static final String SERVICE_OP_ABORT = "abort";
 	public static final String SERVICE_OP_QUERY = "query";
+	public static final String SERVICE_OP_FILTER = "filter";
+	public static final String SERVICE_OP_SORT = "sort";
 
 	public static final String SERVICE_OP_DEVICE_QUERY = "device-query";
 	public static final String SERVICE_OP_DEVICE_CREATE = "device-create";
