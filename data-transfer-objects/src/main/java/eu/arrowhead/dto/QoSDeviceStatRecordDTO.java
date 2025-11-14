@@ -18,15 +18,19 @@ package eu.arrowhead.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record QoSDeviceStatRecordDTO(
 		String metricGroup,
 		long id,
+		String timestamp,
 		String uuid,
-		double minimum,
-		double maximum,
-		double mean,
-		double median,
-		double current,
+		Double minimum,
+		Double maximum,
+		Double mean,
+		Double median,
+		Double current,
 		List<String> systems) {
 
 }
