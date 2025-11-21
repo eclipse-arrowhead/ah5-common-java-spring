@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public record OrchestrationRequestDTO(
 		OrchestrationServiceRequirementDTO serviceRequirement,
 		Map<String, Boolean> orchestrationFlags,
-		List<QoSPreferencesDTO> qosPreferences,
+		List<QoSRequirementDTO> qualityRequirements,
 		Integer exclusivityDuration) {
 
 	//=================================================================================================
@@ -42,7 +42,7 @@ public record OrchestrationRequestDTO(
 
 		private OrchestrationServiceRequirementDTO serviceRequirement;
 		private Map<String, Boolean> orchestrationFlags;
-		private List<QoSPreferencesDTO> qosPreferences;
+		private List<QoSRequirementDTO> qualityRequirements;
 		private Integer exclusivityDuration;
 
 		//=================================================================================================
@@ -70,17 +70,17 @@ public record OrchestrationRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosPreferences(final List<QoSPreferencesDTO> qosPreferences) {
-			this.qosPreferences = qosPreferences;
+		public Builder qualityRequirements(final List<QoSRequirementDTO> qualityRequirements) {
+			this.qualityRequirements = qualityRequirements;
 			return this;
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosPreferences(final QoSPreferencesDTO qosPreference) {
-			if (this.qosPreferences == null) {
-				this.qosPreferences = new ArrayList<>();
+		public Builder qualityRequirements(final QoSRequirementDTO qualityRequirements) {
+			if (this.qualityRequirements == null) {
+				this.qualityRequirements = new ArrayList<>();
 			}
-			this.qosPreferences.add(qosPreference);
+			this.qualityRequirements.add(qualityRequirements);
 			return this;
 		}
 
@@ -92,7 +92,7 @@ public record OrchestrationRequestDTO(
 
 		//-------------------------------------------------------------------------------------------------
 		public OrchestrationRequestDTO build() {
-			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qosPreferences, exclusivityDuration);
+			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qualityRequirements, exclusivityDuration);
 		}
 	}
 }
