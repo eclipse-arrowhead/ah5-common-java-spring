@@ -18,7 +18,7 @@ package eu.arrowhead.dto;
 
 import java.util.List;
 
-public record QoSEvaluationConfigDTO(
+public record QoSDeviceDataEvaluationConfigDTO(
 		List<String> metricNames,
 		List<Double> metricWeights,
 		Integer timeWindow,

@@ -63,6 +63,7 @@ public final class Constants {
 	public static final String METADATA_KEY_FROM = "from";
 	public static final String METADATA_KEY_TO = "to";
 	public static final String METADATA_KEY_DATA_MODEL_IDS = "dataModelIds";
+	public static final String METADATA_KEY_EVALUATION_TYPE = "evaluationType";
 
 	public static final String PROPERTY_KEY_DATA_MODELS = "dataModels";
 	public static final String PROPERTY_KEY_INPUT = "input";

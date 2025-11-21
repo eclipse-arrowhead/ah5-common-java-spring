@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public record OrchestrationRequestDTO(
 		OrchestrationServiceRequirementDTO serviceRequirement,
 		Map<String, Boolean> orchestrationFlags,
-		Map<String, String> qosRequirements,
+		QoSPreferencesDTO qosPreferences,
 		Integer exclusivityDuration) {
 
 	//=================================================================================================
@@ -40,7 +40,7 @@ public record OrchestrationRequestDTO(
 
 		private OrchestrationServiceRequirementDTO serviceRequirement;
 		private Map<String, Boolean> orchestrationFlags;
-		private Map<String, String> qosRequirements;
+		private QoSPreferencesDTO qosPreferences;
 		private Integer exclusivityDuration;
 
 		//=================================================================================================
@@ -68,17 +68,8 @@ public record OrchestrationRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosRequirements(final Map<String, String> qosRequirements) {
-			this.qosRequirements = qosRequirements;
-			return this;
-		}
-
-		//-------------------------------------------------------------------------------------------------
-		public Builder qosRequirement(final String key, final String value) {
-			if (this.qosRequirements == null) {
-				this.qosRequirements = new HashMap<>();
-			}
-			this.qosRequirements.put(key, value);
+		public Builder qosPreferences(final QoSPreferencesDTO qosPreferences) {
+			this.qosPreferences = qosPreferences;
 			return this;
 		}
 
@@ -90,7 +81,7 @@ public record OrchestrationRequestDTO(
 
 		//-------------------------------------------------------------------------------------------------
 		public OrchestrationRequestDTO build() {
-			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qosRequirements, exclusivityDuration);
+			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qosPreferences, exclusivityDuration);
 		}
 	}
 }

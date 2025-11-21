@@ -17,8 +17,9 @@
 package eu.arrowhead.dto;
 
 import java.util.List;
+import java.util.Map;
 
 public record QoSEvaluationRequestDTO(
 		List<String> providers,
-		QoSEvaluationConfigDTO configuration) {
+		Map<String, Object> configuration) {
 }

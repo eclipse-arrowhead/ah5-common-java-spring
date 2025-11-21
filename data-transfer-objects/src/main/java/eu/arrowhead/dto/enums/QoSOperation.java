@@ -16,6 +16,6 @@
  *******************************************************************************/
 package eu.arrowhead.dto.enums;
 
-public enum QoSEvaulationType {
-	FILTERING, RANKING
+public enum QoSOperation {
+	FILTER, SORT
 }
