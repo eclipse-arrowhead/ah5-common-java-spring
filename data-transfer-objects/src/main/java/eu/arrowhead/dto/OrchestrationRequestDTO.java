@@ -16,7 +16,9 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public record OrchestrationRequestDTO(
 		OrchestrationServiceRequirementDTO serviceRequirement,
 		Map<String, Boolean> orchestrationFlags,
-		QoSPreferencesDTO qosPreferences,
+		List<QoSPreferencesDTO> qosPreferences,
 		Integer exclusivityDuration) {
 
 	//=================================================================================================
@@ -40,7 +42,7 @@ public record OrchestrationRequestDTO(
 
 		private OrchestrationServiceRequirementDTO serviceRequirement;
 		private Map<String, Boolean> orchestrationFlags;
-		private QoSPreferencesDTO qosPreferences;
+		private List<QoSPreferencesDTO> qosPreferences;
 		private Integer exclusivityDuration;
 
 		//=================================================================================================
@@ -68,8 +70,17 @@ public record OrchestrationRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosPreferences(final QoSPreferencesDTO qosPreferences) {
+		public Builder qosPreferences(final List<QoSPreferencesDTO> qosPreferences) {
 			this.qosPreferences = qosPreferences;
+			return this;
+		}
+
+		//-------------------------------------------------------------------------------------------------
+		public Builder qosPreferences(final QoSPreferencesDTO qosPreference) {
+			if (this.qosPreferences == null) {
+				this.qosPreferences = new ArrayList<>();
+			}
+			this.qosPreferences.add(qosPreference);
 			return this;
 		}
 
