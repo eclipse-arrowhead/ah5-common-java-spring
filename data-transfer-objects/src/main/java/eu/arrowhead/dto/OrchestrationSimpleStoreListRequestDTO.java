@@ -4,5 +4,4 @@ import java.util.List;
 
 public record OrchestrationSimpleStoreListRequestDTO(
 		List<OrchestrationSimpleStoreRequestDTO> candidates) {
-	
 }
