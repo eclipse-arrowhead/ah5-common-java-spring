@@ -50,6 +50,16 @@ public final class ServiceInstanceIdUtils {
 		return split[0];
 	}
 
+    //-------------------------------------------------------------------------------------------------
+    public static String retrieveServiceDefinitionFromInstanceId(final String instanceId) {
+        Assert.isTrue(!Utilities.isEmpty(instanceId), "instanceId is empty");
+
+        final String[] split = instanceId.split(Constants.COMPOSITE_ID_DELIMITER_REGEXP);
+        Assert.isTrue(split.length == parts, "Invalid instanceId");
+
+        return split[1];
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	public static ServiceInstanceIdParts breakDownInstanceId(final String instanceId) {
 		Assert.isTrue(!Utilities.isEmpty(instanceId), "instanceId is empty");
