@@ -285,7 +285,7 @@ public final class Constants {
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_PUSH_MANAGEMENT = "serviceOrchestrationPushManagement";
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_LOCK_MANAGEMENT = "serviceOrchestrationLockManagement";
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_HISTORY_MANAGEMENT = "serviceOrchestrationHistoryManagement";
-    public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_STORE_MANAGEMENT = "serviceOrchestrationStoreManagement";
+    public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_SIMPLE_STORE_MANAGEMENT = "serviceOrchestrationSimpleStoreManagement";
 
 	public static final String SERVICE_DEF_IDENTITY = "identity";
 	public static final String SERVICE_DEF_IDENTITY_MANAGEMENT = "identityManagement";
