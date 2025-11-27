@@ -61,6 +61,16 @@ public final class ServiceInstanceIdUtils {
     }
 
 	//-------------------------------------------------------------------------------------------------
+	public static String retrieveVersionFromInstanceId(final String instanceId) {
+		Assert.isTrue(!Utilities.isEmpty(instanceId), "instanceId is empty");
+
+		final String[] split = instanceId.split(Constants.COMPOSITE_ID_DELIMITER_REGEXP);
+		Assert.isTrue(split.length == parts, "Invalid instanceId");
+
+		return split[2];
+	}
+
+	//-------------------------------------------------------------------------------------------------
 	public static ServiceInstanceIdParts breakDownInstanceId(final String instanceId) {
 		Assert.isTrue(!Utilities.isEmpty(instanceId), "instanceId is empty");
 
