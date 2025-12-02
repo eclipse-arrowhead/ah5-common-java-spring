@@ -16,9 +16,21 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record QoSDeviceStatRecordDTO(
+		String metricGroup,
+		long id,
+		String timestamp,
+		String uuid,
+		Double minimum,
+		Double maximum,
+		Double mean,
+		Double median,
+		Double current,
+		List<String> systems) {
+
 }

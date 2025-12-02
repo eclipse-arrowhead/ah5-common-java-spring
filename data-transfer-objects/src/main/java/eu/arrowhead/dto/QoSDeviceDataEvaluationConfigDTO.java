@@ -16,9 +16,11 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+import java.util.List;
+
+public record QoSDeviceDataEvaluationConfigDTO(
+		List<String> metricNames,
+		List<Double> metricWeights,
+		Integer timeWindow,
+		Double threshold) {
 }

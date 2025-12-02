@@ -27,7 +27,7 @@ public final class Constants {
 
 	// Framework version
 
-	public static final String AH_FRAMEWORK_VERSION = "5.1.0";
+	public static final String AH_FRAMEWORK_VERSION = "5.2.0";
 
 	// Global
 
@@ -63,10 +63,13 @@ public final class Constants {
 	public static final String METADATA_KEY_FROM = "from";
 	public static final String METADATA_KEY_TO = "to";
 	public static final String METADATA_KEY_DATA_MODEL_IDS = "dataModelIds";
+	public static final String METADATA_KEY_EVALUATION_TYPE = "evaluationType";
 
 	public static final String PROPERTY_KEY_DATA_MODELS = "dataModels";
 	public static final String PROPERTY_KEY_INPUT = "input";
 	public static final String PROPERTY_KEY_OUTPUT = "output";
+	public static final String PROPERTY_KEY_QOS = "qos";
+	public static final String PROPERTY_KEY_DEVICE_AUGMENTED = "deviceAugmented";
 
 	public static final String GENERIC_HTTP_INTERFACE_TEMPLATE_NAME = "generic_http";
 	public static final String GENERIC_HTTPS_INTERFACE_TEMPLATE_NAME = "generic_https";
@@ -103,6 +106,7 @@ public final class Constants {
 	public static final String SYS_NAME_FLEXIBLE_SERVICE_ORCHESTRATION = "FlexibleServiceOrchestration";
 	public static final String SYS_NAME_BLACKLIST = "Blacklist";
 	public static final String SYS_NAME_TRANSLATION_MANAGER = "TranslationManager";
+	public static final String SYS_NAME_DEVICE_QOS_EVALUATOR = "DeviceQoSEvaluator";
 
 	public static final String SECURITY_REQ_AUTHORIZATION = "Authorization";
 
@@ -281,6 +285,7 @@ public final class Constants {
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_PUSH_MANAGEMENT = "serviceOrchestrationPushManagement";
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_LOCK_MANAGEMENT = "serviceOrchestrationLockManagement";
 	public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_HISTORY_MANAGEMENT = "serviceOrchestrationHistoryManagement";
+    public static final String SERVICE_DEF_SERVICE_ORCHESTRATION_SIMPLE_STORE_MANAGEMENT = "serviceOrchestrationSimpleStoreManagement";
 
 	public static final String SERVICE_DEF_IDENTITY = "identity";
 	public static final String SERVICE_DEF_IDENTITY_MANAGEMENT = "identityManagement";
@@ -296,6 +301,9 @@ public final class Constants {
 
 	public static final String SERVICE_DEF_INTERFACE_BRIDGE_MANAGEMENT = "interfaceBridgeManagement";
 	public static final String SERVICE_DEF_DATA_MODEL_TRANSLATION = "dataModelTranslation";
+
+	public static final String SERVICE_DEF_QUALITY_EVALUATION = "qualityEvaluation";
+	public static final String SERVICE_DEF_DEVICE_QUALITY_DATA_MANAGEMENT = "deviceQualityDataManagement";
 
 	// Operation related
 
@@ -317,6 +325,9 @@ public final class Constants {
 	public static final String SERVICE_OP_NEGOTIATION = "negotiation";
 	public static final String SERVICE_OP_ABORT = "abort";
 	public static final String SERVICE_OP_QUERY = "query";
+	public static final String SERVICE_OP_FILTER = "filter";
+	public static final String SERVICE_OP_SORT = "sort";
+	public static final String SERVICE_OP_RELOAD = "reload";
 
 	public static final String SERVICE_OP_DEVICE_QUERY = "device-query";
 	public static final String SERVICE_OP_DEVICE_CREATE = "device-create";
@@ -348,6 +359,7 @@ public final class Constants {
 	public static final String SERVICE_OP_ORCHESTRATION_QUERY = "query";
 	public static final String SERVICE_OP_ORCHESTRATION_REMOVE = "remove";
 	public static final String SERVICE_OP_ORCHESTRATION_CREATE = "create";
+    public static final String SERVICE_OP_ORCHESTRATION_MODIFY_PRIORITIES = "modify-priorities";
 
 	public static final String SERVICE_OP_IDENTITY_LOGIN = "identity-login";
 	public static final String SERVICE_OP_IDENTITY_LOGOUT = "identity-logout";
