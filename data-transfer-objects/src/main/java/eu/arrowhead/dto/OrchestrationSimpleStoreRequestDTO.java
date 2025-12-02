@@ -16,9 +16,8 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+public record OrchestrationSimpleStoreRequestDTO(
+		String consumer,
+		String serviceInstanceId,
+		Integer priority) {
 }

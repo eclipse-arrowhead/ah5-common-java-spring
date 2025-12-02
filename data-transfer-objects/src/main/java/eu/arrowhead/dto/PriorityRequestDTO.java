@@ -16,9 +16,9 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+import java.util.HashMap;
+
+@SuppressWarnings("serial")
+public class PriorityRequestDTO extends HashMap<String, Integer> {
+
 }
