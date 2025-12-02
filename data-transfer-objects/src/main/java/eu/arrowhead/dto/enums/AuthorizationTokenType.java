@@ -46,7 +46,7 @@ public enum AuthorizationTokenType {
 			throw new IllegalArgumentException("Unknown service interface policy: " + policy.name());
 		}
 	}
-	
+
 	//-------------------------------------------------------------------------------------------------
 	public static boolean isOfferable(final AuthorizationTokenType type) {
 		return type != TRANSLATION_BRIDGE_TOKEN;

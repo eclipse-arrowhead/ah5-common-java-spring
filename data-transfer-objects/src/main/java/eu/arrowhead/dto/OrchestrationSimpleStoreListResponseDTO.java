@@ -16,9 +16,10 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+import java.util.List;
+
+public record OrchestrationSimpleStoreListResponseDTO(
+		List<OrchestrationSimpleStoreResponseDTO> entries,
+		long count) {
+
 }

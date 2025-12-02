@@ -16,7 +16,9 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public record OrchestrationRequestDTO(
 		OrchestrationServiceRequirementDTO serviceRequirement,
 		Map<String, Boolean> orchestrationFlags,
-		Map<String, String> qosRequirements,
+		List<QoSRequirementDTO> qualityRequirements,
 		Integer exclusivityDuration) {
 
 	//=================================================================================================
@@ -40,7 +42,7 @@ public record OrchestrationRequestDTO(
 
 		private OrchestrationServiceRequirementDTO serviceRequirement;
 		private Map<String, Boolean> orchestrationFlags;
-		private Map<String, String> qosRequirements;
+		private List<QoSRequirementDTO> qualityRequirements;
 		private Integer exclusivityDuration;
 
 		//=================================================================================================
@@ -68,17 +70,17 @@ public record OrchestrationRequestDTO(
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosRequirements(final Map<String, String> qosRequirements) {
-			this.qosRequirements = qosRequirements;
+		public Builder qualityRequirements(final List<QoSRequirementDTO> qualityRequirements) {
+			this.qualityRequirements = qualityRequirements;
 			return this;
 		}
 
 		//-------------------------------------------------------------------------------------------------
-		public Builder qosRequirement(final String key, final String value) {
-			if (this.qosRequirements == null) {
-				this.qosRequirements = new HashMap<>();
+		public Builder qualityRequirements(final QoSRequirementDTO qualityRequirements) {
+			if (this.qualityRequirements == null) {
+				this.qualityRequirements = new ArrayList<>();
 			}
-			this.qosRequirements.put(key, value);
+			this.qualityRequirements.add(qualityRequirements);
 			return this;
 		}
 
@@ -90,7 +92,7 @@ public record OrchestrationRequestDTO(
 
 		//-------------------------------------------------------------------------------------------------
 		public OrchestrationRequestDTO build() {
-			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qosRequirements, exclusivityDuration);
+			return new OrchestrationRequestDTO(serviceRequirement, orchestrationFlags, qualityRequirements, exclusivityDuration);
 		}
 	}
 }

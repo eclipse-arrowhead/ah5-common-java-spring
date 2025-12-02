@@ -16,9 +16,14 @@
  *******************************************************************************/
 package eu.arrowhead.dto;
 
-public record OrchestrationSubscriptionRequestDTO(
-		String targetSystemName,
-		OrchestrationRequestDTO orchestrationRequest,
-		OrchestrationNotifyInterfaceDTO notifyInterface,
-		Long duration) {
+import java.util.List;
+
+public record QoSDeviceStatQueryRequestDTO(
+		PageDTO pagination,
+		String metricGroup,
+		String from,
+		String to,
+		List<String> aggregation,
+		List<String> systemNames) {
+
 }

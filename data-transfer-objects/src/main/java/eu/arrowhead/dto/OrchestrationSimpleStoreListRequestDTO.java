@@ -14,8 +14,10 @@
  *  	Arrowhead Consortia - conceptualization
  *
  *******************************************************************************/
-package eu.arrowhead.dto.enums;
+package eu.arrowhead.dto;
 
-public enum QoSEvaulationType {
-	FILTERING, RANKING
+import java.util.List;
+
+public record OrchestrationSimpleStoreListRequestDTO(
+		List<OrchestrationSimpleStoreRequestDTO> candidates) {
 }
