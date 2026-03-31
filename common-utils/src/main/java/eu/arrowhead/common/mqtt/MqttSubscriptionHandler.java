@@ -25,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -69,6 +70,7 @@ public class MqttSubscriptionHandler {
 
 		client.subscribe(topic);
 		topicQueueMap.putIfAbsent(topic, new LinkedBlockingQueue<>());
+		logger.info("Subscribed to service-consuming MQTT topic: " + topic);
 		return topicQueueMap.get(topic);
 	}
 
@@ -94,7 +96,7 @@ public class MqttSubscriptionHandler {
 
 	//-------------------------------------------------------------------------------------------------
 	private MqttCallback createMqttCallback(final String brokerUri) {
-		return new MqttCallback() {
+		return new MqttCallbackExtended() {
 
 			//-------------------------------------------------------------------------------------------------
 			@Override
@@ -114,6 +116,22 @@ public class MqttSubscriptionHandler {
 			@Override
 			public void connectionLost(final Throwable cause) {
 				logger.error("MQTT Broker connection lost: " + brokerUri + ". Reason: " + cause.getMessage());
+			}
+
+			//-------------------------------------------------------------------------------------------------
+			@Override
+			public void connectComplete(final boolean reconnect, final String serverURI) {
+				if (reconnect) {
+					for (final String topic : topicQueueMap.keySet()) {
+						try {
+							client.subscribe(topic);
+							logger.info("Re-subscribed to service-consuming MQTT topic: " + topic);
+						} catch (final MqttException ex) {
+							logger.error("Could not re-subscribe to service-consuming MQTT topic: " + topic + ". Reason: " + ex.getMessage());
+							logger.debug(ex);
+						}
+					}
+				}
 			}
 		};
 	}
