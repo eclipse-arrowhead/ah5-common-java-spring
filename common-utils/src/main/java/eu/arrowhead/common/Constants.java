@@ -27,7 +27,7 @@ public final class Constants {
 
 	// Framework version
 
-	public static final String AH_FRAMEWORK_VERSION = "5.2.0";
+	public static final String AH_FRAMEWORK_VERSION = "5.2.1";
 
 	// Global
 
@@ -301,6 +301,7 @@ public final class Constants {
 
 	public static final String SERVICE_DEF_INTERFACE_BRIDGE_MANAGEMENT = "interfaceBridgeManagement";
 	public static final String SERVICE_DEF_DATA_MODEL_TRANSLATION = "dataModelTranslation";
+	public static final String SERVICE_DEF_DATA_MODEL_TRANSLATOR_FACTORY_CONTROL = "dataModelTranslatorFactoryControl";
 
 	public static final String SERVICE_DEF_QUALITY_EVALUATION = "qualityEvaluation";
 	public static final String SERVICE_DEF_DEVICE_QUALITY_DATA_MANAGEMENT = "deviceQualityDataManagement";
@@ -388,6 +389,11 @@ public final class Constants {
 	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_CHECK_TARGETS = "check-targets";
 	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_INIT_BRIDGE = "initialize-bridge";
 	public static final String SERVICE_OP_INTERFACE_TRANSLATOR_ABORT_BRIDGE = "abort-bridge";
+	public static final String SERVICE_OP_DATA_MODEL_TRANSLATOR_FACTORY_CHECK = "check";
+	public static final String SERVICE_OP_DATA_MODEL_TRANSLATOR_FACTORY_INITIALIZE = "initialize";
+	public static final String SERVICE_OP_DATA_MODEL_TRANSLATOR_INIT_TRANSLATION = "init-translation";
+	public static final String SERVICE_OP_DATA_MODEL_TRANSLATOR_GET_TRANSLATION_RESULT = "get-translation-result";
+	public static final String SERVICE_OP_DATA_MODEL_TRANSLATOR_ABORT_TRANSLATION = "abort-translation";
 
 	public static final String HTTP_API_OP_ECHO_PATH = "/echo";
 	public static final String HTTP_API_OP_LOGS_PATH = "/logs";
