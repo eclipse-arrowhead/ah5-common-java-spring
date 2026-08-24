@@ -166,6 +166,7 @@ public class ManagementServiceFilter extends ArrowheadFilter {
 		logger.debug("InternalManagementServiceFilter.findServiceDefinitionAndOperation started...");
 
 		final String templateName = sysInfo.isSslEnabled() ? Constants.GENERIC_HTTPS_INTERFACE_TEMPLATE_NAME : Constants.GENERIC_HTTP_INTERFACE_TEMPLATE_NAME;
+		final String decodedPath = SecurityUtilities.getDecodedUri(path);
 		String serviceDefinition = null;
 		String operation = null;
 
@@ -181,7 +182,7 @@ public class ManagementServiceFilter extends ArrowheadFilter {
 				for (final Entry<String, HttpOperationModel> opEntry : iModel.operations().entrySet()) {
 					final String candidateMethod = opEntry.getValue().method();
 					final String candidatePath = iModel.basePath() + opEntry.getValue().path();
-					if (method.equalsIgnoreCase(candidateMethod) && path.equals(candidatePath)) {
+					if (method.equalsIgnoreCase(candidateMethod) && decodedPath.equals(candidatePath)) {
 						serviceDefinition = sModel.serviceDefinition();
 						operation = opEntry.getKey();
 						break OUTER;
