@@ -40,6 +40,7 @@ import eu.arrowhead.common.http.model.HttpInterfaceModel;
 import eu.arrowhead.common.http.model.HttpOperationModel;
 import eu.arrowhead.common.model.InterfaceModel;
 import eu.arrowhead.common.model.ServiceModel;
+import eu.arrowhead.common.security.SecurityUtilities;
 import eu.arrowhead.common.service.validation.name.ServiceDefinitionNameNormalizer;
 import eu.arrowhead.common.service.validation.name.ServiceOperationNameNormalizer;
 import eu.arrowhead.dto.AuthorizationVerifyRequestDTO;
@@ -80,7 +81,7 @@ public class ManagementServiceFilter extends ArrowheadFilter {
 		logger.debug("ManagementServiceFilter.doFilterInternal started...");
 
 		try {
-			final String requestTarget = request.getRequestURL().toString();
+			final String requestTarget = SecurityUtilities.getDecodedUri(request.getRequestURL().toString());
 			if (requestTarget.contains(mgmtPath)) {
 				final String systemName = (String) request.getAttribute(Constants.HTTP_ATTR_ARROWHEAD_AUTHENTICATED_SYSTEM); // already normalized
 				boolean allowed = false;

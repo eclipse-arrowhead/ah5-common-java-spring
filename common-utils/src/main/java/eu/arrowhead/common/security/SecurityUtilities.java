@@ -40,6 +40,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
+import org.springframework.web.util.UriUtils;
 
 import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.Utilities;
@@ -228,6 +229,15 @@ public final class SecurityUtilities {
 		mac.init(keySpec);
 
 		return Utilities.bytesToHex(mac.doFinal(data.getBytes()));
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public static String getDecodedUri(final String rawUri) {
+		if (Utilities.isEmpty(rawUri)) {
+			return rawUri;
+		}
+
+		return UriUtils.decode(rawUri.trim(), StandardCharsets.UTF_8);
 	}
 
 	//=================================================================================================
