@@ -19,15 +19,32 @@ package eu.arrowhead.common.mqtt.filter.authentication;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+
+import javax.naming.ConfigurationException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,10 +53,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import eu.arrowhead.common.Constants;
+import eu.arrowhead.common.SSLProperties;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.ForbiddenException;
 import eu.arrowhead.common.mqtt.model.MqttRequestModel;
@@ -76,6 +97,9 @@ public class CertificateMqttFilterTest {
 	@Mock
 	private SystemNameNormalizer systemNameNormalizer;
 
+	@Mock
+	private SSLProperties sslProperties;
+
 	private MockedStatic<SecurityUtilities> mockStatic;
 
 	//=================================================================================================
@@ -98,6 +122,77 @@ public class CertificateMqttFilterTest {
 	@Test
 	public void testOrder() {
 		assertEquals(15, filter.order());
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	public void testInitException() throws IOException, NoSuchAlgorithmException, CertificateException {
+		final String serverCN = "ServiceRegistry.Rubin.Aitia.arrowhead.eu";
+		ReflectionTestUtils.setField(filter, "arrowheadContext", Map.of("server.common.name", serverCN));
+		final Resource resourceMock = Mockito.mock(Resource.class);
+		final KeyStore trustStoreMock = Mockito.mock(KeyStore.class);
+
+		try (MockedStatic<KeyStore> storeMock = Mockito.mockStatic(KeyStore.class)) {
+			mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
+			when(sslProperties.getKeyStoreType()).thenReturn("PKCS12");
+			storeMock.when(() -> KeyStore.getInstance("PKCS12")).thenReturn(trustStoreMock);
+			when(sslProperties.getTrustStore()).thenReturn(resourceMock);
+			when(resourceMock.getInputStream()).thenReturn(null);
+			when(sslProperties.getTrustStorePassword()).thenReturn("123456");
+			doThrow(IOException.class).when(trustStoreMock).load(null, "123456".toCharArray());
+
+			final Throwable ex = assertThrows(UndeclaredThrowableException.class,
+					() -> ReflectionTestUtils.invokeMethod(filter, "init"));
+
+			mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
+			verify(sslProperties).getKeyStoreType();
+			storeMock.verify(() -> KeyStore.getInstance("PKCS12"));
+			verify(sslProperties).getTrustStore();
+			verify(resourceMock).getInputStream();
+			verify(sslProperties).getTrustStorePassword();
+			verify(trustStoreMock).load(null, "123456".toCharArray());
+
+			assertTrue(ex.getCause() instanceof ConfigurationException);
+			assertEquals("Unable to locate cloud's public key", ex.getCause().getMessage());
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	public void testInitOk() throws IOException, NoSuchAlgorithmException, CertificateException {
+		assertNull(ReflectionTestUtils.getField(filter, "cloudPublicKey"));
+
+		final String serverCN = "ServiceRegistry.Rubin.Aitia.arrowhead.eu";
+		ReflectionTestUtils.setField(filter, "arrowheadContext", Map.of("server.common.name", serverCN));
+		final Resource resourceMock = Mockito.mock(Resource.class);
+		final KeyStore trustStoreMock = Mockito.mock(KeyStore.class);
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+
+		try (MockedStatic<KeyStore> storeMock = Mockito.mockStatic(KeyStore.class)) {
+			mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
+			when(sslProperties.getKeyStoreType()).thenReturn("PKCS12");
+			storeMock.when(() -> KeyStore.getInstance("PKCS12")).thenReturn(trustStoreMock);
+			when(sslProperties.getTrustStore()).thenReturn(resourceMock);
+			when(resourceMock.getInputStream()).thenReturn(null);
+			when(sslProperties.getTrustStorePassword()).thenReturn("123456");
+			doNothing().when(trustStoreMock).load(null, "123456".toCharArray());
+			mockStatic.when(() -> SecurityUtilities.getPublicKeyFromTrustStore(trustStoreMock, "Rubin.Aitia.arrowhead.eu")).thenReturn(keyMock);
+
+			ReflectionTestUtils.invokeMethod(filter, "init");
+
+			mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
+			verify(sslProperties).getKeyStoreType();
+			storeMock.verify(() -> KeyStore.getInstance("PKCS12"));
+			verify(sslProperties).getTrustStore();
+			verify(resourceMock).getInputStream();
+			verify(sslProperties).getTrustStorePassword();
+			verify(trustStoreMock).load(null, "123456".toCharArray());
+			mockStatic.verify(() -> SecurityUtilities.getPublicKeyFromTrustStore(trustStoreMock, "Rubin.Aitia.arrowhead.eu"));
+
+			final Object obj = ReflectionTestUtils.getField(filter, "cloudPublicKey");
+			assertNotNull(obj);
+			assertEquals(keyMock, obj);
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -162,111 +257,210 @@ public class CertificateMqttFilterTest {
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void testDoFilterAuthKeyNoRequesterData() {
-		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+	public void testDoFilterAuthKeyVerifyFailed() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
 
-		mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class))).thenReturn(null);
+		final String authKey = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCmJtOTBYMkZmWTJWeWRHbG1hV05oZEdVPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t";
+		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", authKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
 
-		final Throwable ex = assertThrows(AuthException.class,
-				() -> filter.doFilter(validAuthKey, request));
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doThrow(CertificateException.class).when(certMock).verify(keyMock);
 
-		mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class)));
+			final Throwable ex = assertThrows(AuthException.class,
+					() -> filter.doFilter(authKey, request));
 
-		assertEquals("Unauthenticated access attempt: test/", ex.getMessage());
+			assertEquals("Invalid authentication key has been provided", ex.getMessage());
+
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void testDoFilterAuthKeyWrongCertificateProfile() {
+	public void testDoFilterAuthKeyNoRequesterData() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
 		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
 
-		mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class))).thenReturn(new CommonNameAndType("cn", CertificateProfileType.ORGANIZATION));
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doNothing().when(certMock).verify(keyMock);
+			mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock)).thenReturn(null);
 
-		final Throwable ex = assertThrows(ForbiddenException.class,
-				() -> filter.doFilter(validAuthKey, request));
+			final Throwable ex = assertThrows(AuthException.class,
+					() -> filter.doFilter(validAuthKey, request));
 
-		mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class)));
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+			mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock));
 
-		assertTrue(ex.getMessage().startsWith("Unauthorized access: "));
+			assertEquals("Unauthenticated access attempt: test/", ex.getMessage());
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void testDoFilterAuthKeyOtherCloud() {
+	public void testDoFilterAuthKeyWrongCertificateProfile() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
+		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
+
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doNothing().when(certMock).verify(keyMock);
+			mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock)).thenReturn(new CommonNameAndType("cn", CertificateProfileType.ORGANIZATION));
+
+			final Throwable ex = assertThrows(ForbiddenException.class,
+					() -> filter.doFilter(validAuthKey, request));
+
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+			mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock));
+
+			assertTrue(ex.getMessage().startsWith("Unauthorized access: "));
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	public void testDoFilterAuthKeyOtherCloud() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
 		final String requesterCN = "ConsumerAuthorization.TestCloud.Aitia.arrowhead.eu";
 		final String serverCN = "ServiceRegistry.Rubin.Aitia.arrowhead.eu";
 		ReflectionTestUtils.setField(filter, "arrowheadContext", Map.of("server.common.name", serverCN));
 		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
 
-		mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class))).thenReturn(new CommonNameAndType(
-				requesterCN,
-				CertificateProfileType.SYSTEM));
-		mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
-		mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "Rubin.Aitia.arrowhead.eu")).thenReturn(false);
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doNothing().when(certMock).verify(keyMock);
+			mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock)).thenReturn(new CommonNameAndType(
+					requesterCN,
+					CertificateProfileType.SYSTEM));
+			mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
+			mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "Rubin.Aitia.arrowhead.eu")).thenReturn(false);
 
-		final Throwable ex = assertThrows(ForbiddenException.class,
-				() -> filter.doFilter(validAuthKey, request));
+			final Throwable ex = assertThrows(ForbiddenException.class,
+					() -> filter.doFilter(validAuthKey, request));
 
-		mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class)));
-		mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
-		mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "Rubin.Aitia.arrowhead.eu"));
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+			mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock));
+			mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
+			mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "Rubin.Aitia.arrowhead.eu"));
 
-		assertTrue(ex.getMessage().startsWith("Unauthorized access: "));
+			assertTrue(ex.getMessage().startsWith("Unauthorized access: "));
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void testDoFilterSysopOk() {
+	public void testDoFilterSysopOk() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
 		final String requesterCN = "Sysop.TestCloud.Aitia.arrowhead.eu";
 		final String serverCN = "ServiceRegistry.TestCloud.Aitia.arrowhead.eu";
 		ReflectionTestUtils.setField(filter, "arrowheadContext", Map.of("server.common.name", serverCN));
 		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
 
-		mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class))).thenReturn(new CommonNameAndType(
-				requesterCN,
-				CertificateProfileType.OPERATOR));
-		mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
-		mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu")).thenReturn(true);
-		mockStatic.when(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN)).thenCallRealMethod();
-		when(systemNameNormalizer.normalize("Sysop")).thenReturn("Sysop");
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doNothing().when(certMock).verify(keyMock);
+			mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock)).thenReturn(new CommonNameAndType(
+					requesterCN,
+					CertificateProfileType.OPERATOR));
+			mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
+			mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu")).thenReturn(true);
+			mockStatic.when(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN)).thenCallRealMethod();
+			when(systemNameNormalizer.normalize("Sysop")).thenReturn("Sysop");
 
-		assertDoesNotThrow(() -> filter.doFilter(validAuthKey, request));
+			assertDoesNotThrow(() -> filter.doFilter(validAuthKey, request));
 
-		mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class)));
-		mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
-		mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu"));
-		mockStatic.verify(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN));
-		verify(systemNameNormalizer).normalize("Sysop");
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+			mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock));
+			mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
+			mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu"));
+			mockStatic.verify(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN));
+			verify(systemNameNormalizer).normalize("Sysop");
 
-		assertEquals("Sysop", request.getRequester());
-		assertTrue(request.isSysOp());
+			assertEquals("Sysop", request.getRequester());
+			assertTrue(request.isSysOp());
+		}
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	@Test
-	public void testDoFilterSystemOk() {
+	public void testDoFilterSystemOk() throws CertificateException, InvalidKeyException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+		final PublicKey keyMock = Mockito.mock(PublicKey.class);
+		ReflectionTestUtils.setField(filter, "cloudPublicKey", keyMock);
 		final String requesterCN = "ConsumerAuthorization.TestCloud.Aitia.arrowhead.eu";
 		final String serverCN = "ServiceRegistry.TestCloud.Aitia.arrowhead.eu";
 		ReflectionTestUtils.setField(filter, "arrowheadContext", Map.of("server.common.name", serverCN));
 		final MqttRequestModel request = new MqttRequestModel("test/", "test-operation", new MqttRequestTemplate("trace", validAuthKey, "response", 0, null, "payload"));
+		final CertificateFactory factoryMock = Mockito.mock(CertificateFactory.class);
+		final X509Certificate certMock = Mockito.mock(X509Certificate.class);
 
-		mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class))).thenReturn(new CommonNameAndType(
-				requesterCN,
-				CertificateProfileType.SYSTEM));
-		mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
-		mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu")).thenReturn(true);
-		mockStatic.when(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN)).thenCallRealMethod();
-		when(systemNameNormalizer.normalize("ConsumerAuthorization")).thenReturn("ConsumerAuthorization");
+		try (MockedStatic<CertificateFactory> factoryStaticMock = Mockito.mockStatic(CertificateFactory.class)) {
+			factoryStaticMock.when(() -> CertificateFactory.getInstance(Constants.X_509)).thenReturn(factoryMock);
+			when(factoryMock.generateCertificate(any(InputStream.class))).thenReturn(certMock);
+			doNothing().when(certMock).checkValidity();
+			doNothing().when(certMock).verify(keyMock);
+			mockStatic.when(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock)).thenReturn(new CommonNameAndType(
+					requesterCN,
+					CertificateProfileType.SYSTEM));
+			mockStatic.when(() -> SecurityUtilities.getCloudCN(serverCN)).thenCallRealMethod();
+			mockStatic.when(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu")).thenReturn(true);
+			mockStatic.when(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN)).thenCallRealMethod();
+			when(systemNameNormalizer.normalize("ConsumerAuthorization")).thenReturn("ConsumerAuthorization");
 
-		assertDoesNotThrow(() -> filter.doFilter(validAuthKey, request));
+			assertDoesNotThrow(() -> filter.doFilter(validAuthKey, request));
 
-		mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(any(X509Certificate.class)));
-		mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
-		mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu"));
-		mockStatic.verify(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN));
-		verify(systemNameNormalizer).normalize("ConsumerAuthorization");
+			factoryStaticMock.verify(() -> CertificateFactory.getInstance(Constants.X_509));
+			verify(factoryMock).generateCertificate(any(InputStream.class));
+			verify(certMock).checkValidity();
+			verify(certMock).verify(keyMock);
+			mockStatic.verify(() -> SecurityUtilities.getIdentificationDataFromCertificate(certMock));
+			mockStatic.verify(() -> SecurityUtilities.getCloudCN(serverCN));
+			mockStatic.verify(() -> SecurityUtilities.isClientInTheLocalCloudByCNs(appContext, requesterCN, "TestCloud.Aitia.arrowhead.eu"));
+			mockStatic.verify(() -> SecurityUtilities.getClientNameFromClientCN(requesterCN));
+			verify(systemNameNormalizer).normalize("ConsumerAuthorization");
 
-		assertEquals("ConsumerAuthorization", request.getRequester());
-		assertFalse(request.isSysOp());
+			assertEquals("ConsumerAuthorization", request.getRequester());
+			assertFalse(request.isSysOp());
+		}
 	}
 }
