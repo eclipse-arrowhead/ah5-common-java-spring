@@ -41,6 +41,7 @@ import eu.arrowhead.common.http.model.HttpInterfaceModel;
 import eu.arrowhead.common.http.model.HttpOperationModel;
 import eu.arrowhead.common.model.InterfaceModel;
 import eu.arrowhead.common.model.ServiceModel;
+import eu.arrowhead.common.security.SecurityUtilities;
 import eu.arrowhead.dto.ServiceInstanceLookupRequestDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -133,7 +134,7 @@ public class BlacklistFilter extends ArrowheadFilter {
 		}
 
 		// is the request lookup?
-		final String requestTarget = Utilities.stripEndSlash(request.getRequestURL().toString());
+		final String requestTarget = Utilities.stripEndSlash(SecurityUtilities.getDecodedUri(request.getRequestURL().toString()));
 
 		// finding the path and method of the lookup operation
 		HttpOperationModel lookupOp = null;

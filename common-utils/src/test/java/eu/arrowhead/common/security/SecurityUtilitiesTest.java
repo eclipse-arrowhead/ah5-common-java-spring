@@ -488,6 +488,23 @@ public class SecurityUtilitiesTest {
 		assertEquals("aeaf6a892cc3a9a1385cf1ec708174035f168008aaa8b02db6a7790e136d7119", result);
 	}
 
+	//-------------------------------------------------------------------------------------------------
+	@Test
+	void testGetDecodedUri() {
+		assertAll(
+				() -> assertNull(SecurityUtilities.getDecodedUri(null), "null input should return null"),
+				() -> assertEquals("", SecurityUtilities.getDecodedUri(""), "empty string should be returned as-is"),
+				() -> assertEquals("   ", SecurityUtilities.getDecodedUri("   "), "blank string should be returned as-is"),
+				() -> assertEquals("hello", SecurityUtilities.getDecodedUri("hello"), "plain string with no encoding"),
+				() -> assertEquals("hello world", SecurityUtilities.getDecodedUri("hello%20world"), "decodes %20 to space"),
+				() -> assertEquals("hello world", SecurityUtilities.getDecodedUri("  hello%20world  "), "trims before decoding"),
+				() -> assertEquals("a=b&c=d", SecurityUtilities.getDecodedUri("a%3Db%26c%3Dd"), "decodes special characters"),
+				() -> assertEquals("café", SecurityUtilities.getDecodedUri("caf%C3%A9"), "decodes UTF-8 multi-byte sequences"),
+				() -> assertEquals("100%", SecurityUtilities.getDecodedUri("100%25"), "decodes literal percent sign"),
+				() -> assertThrows(IllegalArgumentException.class,
+				() -> SecurityUtilities.getDecodedUri("100%"), "malformed encoding throws"));
+	}
+
 	//=================================================================================================
 	// assistant methods
 

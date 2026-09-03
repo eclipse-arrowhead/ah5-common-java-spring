@@ -135,7 +135,7 @@ public class OutsourcedFilter extends ArrowheadFilter implements IAuthentication
 			}
 		}
 
-		final String requestTarget = Utilities.stripEndSlash(request.getRequestURI());
+		final String requestTarget = Utilities.stripEndSlash(SecurityUtilities.getDecodedUri(request.getRequestURI()));
 		if (lookupOp == null || basePath == null || !request.getMethod().equalsIgnoreCase(lookupOp.method()) || !requestTarget.equals(basePath + lookupOp.path())) {
 			// SR does not provide lookup operation or the request is not lookup
 			return false;

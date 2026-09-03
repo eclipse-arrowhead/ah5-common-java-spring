@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.exception.ArrowheadException;
 import eu.arrowhead.common.http.HttpUtilities;
+import eu.arrowhead.common.security.SecurityUtilities;
 import eu.arrowhead.dto.ErrorMessageDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -70,7 +71,7 @@ public abstract class ArrowheadFilter extends OncePerRequestFilter {
 	//-------------------------------------------------------------------------------------------------
 	@Override
 	protected boolean shouldNotFilter(final HttpServletRequest request) throws ServletException {
-		final String path = request.getRequestURI();
+		final String path = SecurityUtilities.getDecodedUri(request.getRequestURI());
 		return path.equals("/") || path.startsWith(Constants.SWAGGER_API_DOCS_URI) || path.startsWith(Constants.SWAGGER_UI_URI);
 	}
 
