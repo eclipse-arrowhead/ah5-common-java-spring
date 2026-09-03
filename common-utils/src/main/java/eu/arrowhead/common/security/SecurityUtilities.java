@@ -22,10 +22,12 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ServiceConfigurationError;
 
@@ -40,6 +42,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.Assert;
+import org.springframework.web.util.UriUtils;
 
 import eu.arrowhead.common.Constants;
 import eu.arrowhead.common.Utilities;
@@ -92,6 +95,56 @@ public final class SecurityUtilities {
 			logger.error("Getting the private key from key store failed...", ex);
 			throw new ServiceConfigurationError("Getting the private key from key store failed...", ex);
 		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Nullable
+	public static PublicKey getPublicKeyFromTrustStore(final KeyStore trustStore, final String cn) {
+		Assert.notNull(trustStore, "Key store is not defined");
+		Assert.isTrue(!Utilities.isEmpty(cn), "CN is not defined");
+
+		try {
+			for (final String alias : Collections.list(trustStore.aliases())) {
+				final Certificate certificate = trustStore.getCertificate(alias);
+				if (certificate != null) {
+					final X509Certificate cert = (X509Certificate) certificate;
+					final String commonName = getCommonNameFromSubjectDN(cert.getSubjectX500Principal().getName(X500Principal.RFC2253));
+					if (commonName.equals(cn)) {
+						return cert.getPublicKey();
+					}
+				}
+			}
+		} catch (final KeyStoreException ex) {
+			logger.error("Accessing certificate from key store failed...", ex);
+			throw new ServiceConfigurationError("Accessing certificate from key store failed...", ex);
+		}
+
+		return null;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	@Nullable
+	public static String getCommonNameFromSubjectDN(final String dn) {
+		if (Utilities.isEmpty(dn)) {
+			return null;
+		}
+
+		try {
+			// DN is in LDAP format, we can use the LdapName object for parsing
+			final LdapName ldapname = new LdapName(dn);
+			for (final Rdn rdn : ldapname.getRdns()) {
+				// Find the data after the CN and DN_QUALIFIER fields
+				if (COMMON_NAME_FIELD_NAME.equalsIgnoreCase(rdn.getType())) {
+					return (String) rdn.getValue();
+				}
+			}
+
+		} catch (final InvalidNameException ex) {
+			logger.warn("InvalidNameException in getCommonNameFromSubjectDN: {}", ex.getMessage());
+			logger.debug("Exception", ex);
+		}
+
+		return null;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -228,6 +281,15 @@ public final class SecurityUtilities {
 		mac.init(keySpec);
 
 		return Utilities.bytesToHex(mac.doFinal(data.getBytes()));
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	public static String getDecodedUri(final String rawUri) {
+		if (Utilities.isEmpty(rawUri)) {
+			return rawUri;
+		}
+
+		return UriUtils.decode(rawUri.trim(), StandardCharsets.UTF_8);
 	}
 
 	//=================================================================================================
