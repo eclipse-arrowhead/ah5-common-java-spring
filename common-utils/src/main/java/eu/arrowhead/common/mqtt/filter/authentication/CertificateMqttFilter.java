@@ -17,18 +17,31 @@
 package eu.arrowhead.common.mqtt.filter.authentication;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Map;
 
+import javax.naming.ConfigurationException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 
 import eu.arrowhead.common.Constants;
+import eu.arrowhead.common.SSLProperties;
 import eu.arrowhead.common.Utilities;
 import eu.arrowhead.common.exception.AuthException;
 import eu.arrowhead.common.exception.ForbiddenException;
@@ -54,6 +67,11 @@ public class CertificateMqttFilter implements ArrowheadMqttFilter {
 	@Autowired
 	private SystemNameNormalizer systemNameNormalizer;
 
+	@Autowired
+	private SSLProperties sslProperties;
+
+	private PublicKey cloudPublicKey;
+
 	private static final String beginCert = "-----BEGIN CERTIFICATE-----";
 	private static final String endCert = "-----END CERTIFICATE-----";
 	private static final String whitespaceRegexp = "\\s+";
@@ -75,6 +93,7 @@ public class CertificateMqttFilter implements ArrowheadMqttFilter {
 		logger.debug("Checking access in CertificateMqttFilter...");
 
 		final X509Certificate x509Certificate = decodeAuthorizationKey(authKey);
+		checkCertificate(x509Certificate);
 		final CommonNameAndType requesterData = SecurityUtilities.getIdentificationDataFromCertificate(x509Certificate);
 		if (requesterData == null) {
 			logger.error("Unauthenticated access attempt: {}", request.getBaseTopic());
@@ -87,6 +106,27 @@ public class CertificateMqttFilter implements ArrowheadMqttFilter {
 
 	//=================================================================================================
 	// assistant methods
+
+	//-------------------------------------------------------------------------------------------------
+	@EventListener(ApplicationReadyEvent.class)
+	private void init() throws ConfigurationException {
+		logger.debug("CertificateMqttFilter.init started...");
+
+		// Authentication policy cannot be 'CERTIFICATE' while SSL is disabled
+		final String serverCN = (String) arrowheadContext.get(Constants.SERVER_COMMON_NAME);
+		final String cloudCN = SecurityUtilities.getCloudCN(serverCN);
+		KeyStore trustStore;
+		try {
+			trustStore = KeyStore.getInstance(sslProperties.getKeyStoreType());
+			trustStore.load(sslProperties.getTrustStore().getInputStream(), sslProperties.getTrustStorePassword().toCharArray());
+			cloudPublicKey = SecurityUtilities.getPublicKeyFromTrustStore(trustStore, cloudCN);
+		} catch (final KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException ex) {
+			logger.error(ex.getMessage());
+			logger.debug(ex);
+
+			throw new ConfigurationException("Unable to locate cloud's public key");
+		}
+	}
 
 	//-------------------------------------------------------------------------------------------------
 	private X509Certificate decodeAuthorizationKey(final String authKey) {
@@ -108,6 +148,18 @@ public class CertificateMqttFilter implements ArrowheadMqttFilter {
 
 			return (X509Certificate) certificateFactory.generateCertificate(certStream);
 		} catch (final IllegalArgumentException | CertificateException ex) {
+			logger.error(ex.getMessage());
+			logger.debug(ex);
+			throw new AuthException("Invalid authentication key has been provided");
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	private void checkCertificate(final X509Certificate cert) {
+		try {
+			cert.checkValidity();
+			cert.verify(cloudPublicKey);
+		} catch (final CertificateException | InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException ex) {
 			logger.error(ex.getMessage());
 			logger.debug(ex);
 			throw new AuthException("Invalid authentication key has been provided");
